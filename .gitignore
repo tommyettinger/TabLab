@@ -10,3 +10,21 @@ buildNumber.properties
 
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
+
+# Build and Release Folders
+build/
+target/
+out/
+*.class
+*.iml
+.idea/
+.settings/
+/bin/
+
+# Gradle temporary files
+.gradle/
+
+# jEdit garbage
+*~
+*#*#
+*#*.*#
