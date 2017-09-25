@@ -2,6 +2,8 @@ package com.github.tommyettinger.tablab;
 
 import org.junit.Test;
 
+import java.io.File;
+
 /**
  * Created by Tommy Ettinger on 9/23/2017.
  */
@@ -29,6 +31,7 @@ public class TSVReaderTest {
         reader.read(input);
         CodeWriter writer = new CodeWriter("com.github.tommyettinger.tablab.generated");
         System.out.println(writer.write(reader));
+        writer.writeTo(reader, new File("src/test/java/"));
 
     }
 }
