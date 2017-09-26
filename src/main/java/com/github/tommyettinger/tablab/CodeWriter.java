@@ -12,7 +12,7 @@ import java.util.HashMap;
  */
 public class CodeWriter
 {
-    public String packageName = "generated";
+    public String packageName = "tab.lab.generated";
     public CodeWriter()
     {
     }
@@ -64,14 +64,28 @@ public class CodeWriter
         MethodSpec.Builder make = MethodSpec.constructorBuilder().addModifiers(mods);
 
         String section, field;
-        TypeName typename;
         int fieldCount = reader.headerLine.length;
+        TypeName typename;
+        TypeName[] typenameFields = new TypeName[fieldCount];
         boolean[] stringFields = new boolean[fieldCount];
+        String[] arraySeparators = new String[fieldCount];
         for (int i = 0; i < fieldCount; i++) {
             section = reader.headerLine[i];
-            int colon = section.indexOf(':');
-            tb.addField(typename = typenames.getOrDefault(section.substring(colon+1), STR), field = section.substring(0, colon), mods);
-            stringFields[i] = typename.equals(STR);
+            int colon = section.indexOf(':'), typeLen = section.indexOf('[');
+            if(typeLen < 0) {
+                typeLen = section.length();
+                typename = typenames.getOrDefault(section.substring(colon + 1, typeLen), STR);
+                stringFields[i] = typename.equals(STR);
+            }
+            else {
+                typename = typenames.getOrDefault(section.substring(colon + 1, typeLen), STR);
+                stringFields[i] = typename.equals(STR);
+                typename = ArrayTypeName.of(typename);
+                arraySeparators[i] = section.substring(typeLen+1, section.indexOf(']'));
+            }
+            typenameFields[i] = typename;
+            field = section.substring(0, colon);
+            tb.addField(typename, field, mods);
             make.addParameter(typename, field).addStatement("this.$N = $N", field, field);
         }
         tb.addMethod(make.build());
@@ -82,16 +96,23 @@ public class CodeWriter
         for (int i = 0; i < reader.contentLines.length; i++) {
             cbb.add("new $T(", cn);
             int j = 0;
-            for (; j < fieldCount - 1; j++) {
+            for (; j < fieldCount; j++) {
                 if(stringFields[j])
-                    cbb.add("$S, ", reader.contentLines[i][j]);
+                {
+                    if(arraySeparators[j] != null)
+                        cbb.add("new $T {$L}", typenameFields[j],
+                                stringLiteral(reader.contentLines[i][j].replace(
+                                        arraySeparators[j], "\uFEFF, \uFEFF")).replace('\ufeff', '\"'));
+                    else
+                        cbb.add("$S", reader.contentLines[i][j]);
+                }
+                else if(arraySeparators[j] != null)
+                    cbb.add("new $T {$L}", typenameFields[i], reader.contentLines[i][j].replace(arraySeparators[j], ", "), "");
                 else
-                    cbb.add("$L, ", reader.contentLines[i][j]);
+                    cbb.add("$L", reader.contentLines[i][j]);
+                if(j < fieldCount - 1)
+                    cbb.add(", ");
             }
-            if(stringFields[j])
-                cbb.add("$S", reader.contentLines[i][j]);
-            else
-                cbb.add("$L", reader.contentLines[i][j]);
 
             cbb.add("),\n");
         }
@@ -102,4 +123,49 @@ public class CodeWriter
         TypeSpec t = tb.build();
         return JavaFile.builder(packageName, t).build();
     }
+
+    private static String characterLiteral(char c) {
+        // see https://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.10.6
+        switch (c) {
+            case '\b': return "\\b"; /* \u0008: backspace (BS) */
+            case '\t': return "\\t"; /* \u0009: horizontal tab (HT) */
+            case '\n': return "\\n"; /* \u000a: linefeed (LF) */
+            case '\f': return "\\f"; /* \u000c: form feed (FF) */
+            case '\r': return "\\r"; /* \u000d: carriage return (CR) */
+            case '\"': return "\"";  /* \u0022: double quote (") */
+            case '\'': return "\\'"; /* \u0027: single quote (') */
+            case '\\': return "\\\\";  /* \u005c: backslash (\) */
+            default:
+                return Character.isISOControl(c) ? String.format("\\u%04x", (int) c) : Character.toString(c);
+        }
+    }
+
+    /**
+     * Returns the string literal representing {@code value}, including wrapping double quotes.
+     * From CodePoet source (com.squareup.javapoet.Util), with small changes.
+     * @param value the value to escape as a String
+     * @return the string literal representing {@code value}, including wrapping double quotes.
+     */
+    private static String stringLiteral(String value) {
+        StringBuilder result = new StringBuilder(value.length() + 2);
+        result.append('"');
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            // trivial case: single quote must not be escaped
+            if (c == '\'') {
+                result.append("'");
+                continue;
+            }
+            // trivial case: double quotes must be escaped
+            if (c == '\"') {
+                result.append("\\\"");
+                continue;
+            }
+            // default case: just let character literal do its work
+            result.append(characterLiteral(c));
+        }
+        result.append('"');
+        return result.toString();
+    }
+
 }

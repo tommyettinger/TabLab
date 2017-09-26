@@ -8,9 +8,9 @@ import java.io.File;
  * Created by Tommy Ettinger on 9/23/2017.
  */
 public class TSVReaderTest {
-    private String input = "Job\nname:str\tdescription:str\toffense:int\tdefense:int\n" +
-            "Abjurer\tA defensive mage\t1\t9\n" +
-            "Ninja\tA nimble assassin\t9\t1\n";
+    private String input = "Job\nname:str\tdescription:str\toffense:int\tdefense:int\tskills:str[;;]\n" +
+            "Abjurer\tA defensive mage\t1\t9\tHaze;;Mist Shackles;;Barricade;;Stony Shield;;Body of Iron\n" +
+            "Ninja\tA nimble assassin\t9\t1\tVanish;;Poison;;Smoke Bomb;;Ninjutsu\n";
 
     @Test
     public void testBasics()
