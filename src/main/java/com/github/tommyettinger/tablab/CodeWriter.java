@@ -12,13 +12,8 @@ import java.util.HashMap;
  */
 public class CodeWriter
 {
-    public String packageName = "tab.lab.generated";
     public CodeWriter()
     {
-    }
-    public CodeWriter(String packageName)
-    {
-        this.packageName = packageName;
     }
     private static final Modifier[] mods = {Modifier.PUBLIC};
     private static final TypeName STR = TypeName.get(String.class);
@@ -60,6 +55,9 @@ public class CodeWriter
 
     public JavaFile write(TSVReader reader)
     {
+        String packageName = reader.packageName;
+        if(packageName == null || packageName.isEmpty())
+            packageName = "tab.lab.generated";
         TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods);
         MethodSpec.Builder make = MethodSpec.constructorBuilder().addModifiers(mods);
 
@@ -107,7 +105,7 @@ public class CodeWriter
                         cbb.add("$S", reader.contentLines[i][j]);
                 }
                 else if(arraySeparators[j] != null)
-                    cbb.add("new $T {$L}", typenameFields[i], reader.contentLines[i][j].replace(arraySeparators[j], ", "), "");
+                    cbb.add("new $T {$L}", typenameFields[j], reader.contentLines[i][j].replace(arraySeparators[j], ", "));
                 else
                     cbb.add("$L", reader.contentLines[i][j]);
                 if(j < fieldCount - 1)

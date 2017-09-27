@@ -8,9 +8,10 @@ import java.io.File;
  * Created by Tommy Ettinger on 9/23/2017.
  */
 public class TSVReaderTest {
-    private String input = "Job\nname:str\tdescription:str\toffense:int\tdefense:int\tskills:str[;;]\n" +
-            "Abjurer\tA defensive mage\t1\t9\tHaze;;Mist Shackles;;Barricade;;Stony Shield;;Body of Iron\n" +
-            "Ninja\tA nimble assassin\t9\t1\tVanish;;Poison;;Smoke Bomb;;Ninjutsu\n";
+    private String input = "com.github.tommyettinger.tablab.generated.Job\n" +
+            "name:str\tdescription:str\toffense:int\tdefense:int\tskills:str[;;]\tranks:int[,]\n" +
+            "Abjurer\tA defensive mage\t1\t9\tHaze;;Mist Shackles;;Barricade;;Stony Shield;;Body of Iron\t3,1,2,3,1\n" +
+            "Ninja\tA nimble assassin\t9\t1\tVanish;;Poison;;Smoke Bomb;;Ninjutsu\t4,2,1,3\n";
 
     @Test
     public void testBasics()
@@ -29,7 +30,7 @@ public class TSVReaderTest {
     {
         TSVReader reader = new TSVReader();
         reader.read(input);
-        CodeWriter writer = new CodeWriter("com.github.tommyettinger.tablab.generated");
+        CodeWriter writer = new CodeWriter();
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/java/"));
 
