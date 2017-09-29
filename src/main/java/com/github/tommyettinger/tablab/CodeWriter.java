@@ -5,7 +5,18 @@ import com.squareup.javapoet.*;
 import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.regex.Matcher;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Created by Tommy Ettinger on 9/23/2017.
@@ -21,14 +32,23 @@ public class CodeWriter
     static {
         typenames.put("String", STR);
         typenames.put("str", STR);
+        typenames.put("s", STR);
         typenames.put("bool", TypeName.BOOLEAN);
         typenames.put("boolean", TypeName.BOOLEAN);
+        typenames.put("b", TypeName.BOOLEAN);
         typenames.put("char", TypeName.CHAR);
+        typenames.put("c", TypeName.CHAR);
         typenames.put("int", TypeName.INT);
+        typenames.put("i", TypeName.INT);
         typenames.put("long", TypeName.LONG);
+        typenames.put("l", TypeName.LONG);
         typenames.put("float", TypeName.FLOAT);
+        typenames.put("f", TypeName.FLOAT);
         typenames.put("double", TypeName.DOUBLE);
+        typenames.put("d", TypeName.DOUBLE);
+        typenames.put("Object", TypeName.OBJECT);
         typenames.put("object", TypeName.OBJECT);
+        typenames.put("o", TypeName.OBJECT);
     }
     public String writeToString(TSVReader reader)
     {
@@ -47,7 +67,25 @@ public class CodeWriter
     public void writeTo(TSVReader reader, File file)
     {
         try {
-            write(reader).writeTo(file);
+            Path p = file.toPath(), outputDirectory = p;
+            write(reader).writeTo(p);
+            try {
+                if (!reader.packageName.isEmpty()) {
+                    for (String packageComponent : StringKit.split(reader.packageName, ".")) {
+                        outputDirectory = outputDirectory.resolve(packageComponent);
+                    }
+                }
+
+                Path outputPath = outputDirectory.resolve("TabLabTools.java");
+                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath), UTF_8)) {
+                    writer.write(new String(
+                            Files.readAllBytes(Paths.get(getClass().getResource("/TabLabTools.txt").toURI())),
+                            StandardCharsets.UTF_8)
+                            .replaceFirst("###~~~###", Matcher.quoteReplacement(reader.packageName)));
+                }
+            } catch (URISyntaxException ignored) {
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -57,29 +95,44 @@ public class CodeWriter
     {
         String packageName = reader.packageName;
         if(packageName == null || packageName.isEmpty())
-            packageName = "tab.lab.generated";
+            packageName = reader.packageName = "tab.lab.generated";
+//        TypeSpec.Builder toolsB = TypeSpec.classBuilder("TabLabTools").addModifiers(mods);
+//        MethodSpec.Builder toolsM = MethodSpec.methodBuilder("makeMap").addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+//                .addTypeVariable(TypeVariableName.get("K")).addTypeVariable(TypeVariableName.get("V"));
+        ClassName tlt = ClassName.get(packageName, "TabLabTools");
         TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods);
         MethodSpec.Builder make = MethodSpec.constructorBuilder().addModifiers(mods);
-
         String section, field;
         int fieldCount = reader.headerLine.length;
-        TypeName typename;
+        TypeName typename, typenameExtra1, typenameExtra2;
         TypeName[] typenameFields = new TypeName[fieldCount];
+        TypeName[] typenameExtras1 = new TypeName[fieldCount];
+        TypeName[] typenameExtras2 = new TypeName[fieldCount];
         boolean[] stringFields = new boolean[fieldCount];
+        boolean[] stringExtras = new boolean[fieldCount];
         String[] arraySeparators = new String[fieldCount];
         for (int i = 0; i < fieldCount; i++) {
             section = reader.headerLine[i];
-            int colon = section.indexOf(':'), typeLen = section.indexOf('[');
+            int colon = section.indexOf(':'), arrayStart = section.indexOf('['),
+                    mapStart = section.indexOf('{'), mapEnd = section.indexOf('}'),
+                    typeLen = Math.max(arrayStart, mapStart);
             if(typeLen < 0) {
-                typeLen = section.length();
-                typename = typenames.getOrDefault(section.substring(colon + 1, typeLen), STR);
+                typename = typenames.getOrDefault(section.substring(colon + 1, section.length()), STR);
                 stringFields[i] = typename.equals(STR);
             }
-            else {
-                typename = typenames.getOrDefault(section.substring(colon + 1, typeLen), STR);
+            else if(arrayStart >= 0) {
+                typename = typenames.getOrDefault(section.substring(colon + 1, arrayStart), STR);
                 stringFields[i] = typename.equals(STR);
                 typename = ArrayTypeName.of(typename);
-                arraySeparators[i] = section.substring(typeLen+1, section.indexOf(']'));
+                arraySeparators[i] = section.substring(arrayStart+1, section.indexOf(']'));
+            }
+            else { // map case
+                typenameExtras1[i] = typenameExtra1 = typenames.getOrDefault(section.substring(colon + 1, mapStart), STR).box();
+                typenameExtras2[i] = typenameExtra2 = typenames.getOrDefault(section.substring(mapEnd + 1, section.length()), STR).box();
+                stringFields[i] = typenameExtra1.equals(STR);
+                stringExtras[i] = typenameExtra2.equals(STR);
+                typename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), typenameExtra1, typenameExtra2);
+                arraySeparators[i] = section.substring(mapStart+1, mapEnd);
             }
             typenameFields[i] = typename;
             field = section.substring(0, colon);
@@ -95,12 +148,24 @@ public class CodeWriter
             cbb.add("new $T(", cn);
             int j = 0;
             for (; j < fieldCount; j++) {
-                if(stringFields[j])
+                if(stringFields[j] || stringExtras[j])
                 {
-                    if(arraySeparators[j] != null)
-                        cbb.add("new $T {$L}", typenameFields[j],
-                                stringLiteral(reader.contentLines[i][j].replace(
-                                        arraySeparators[j], "\uFEFF, \uFEFF")).replace('\ufeff', '\"'));
+                    if(arraySeparators[j] != null) {
+                        if(typenameExtras1[j] != null)
+                        {
+                            if(!reader.contentLines[i][j].contains(arraySeparators[j]))
+                                cbb.add("new $T<$T, $T>()", LinkedHashMap.class, typenameExtras1[j], typenameExtras2[j]);
+                            else
+                                cbb.add("$T.makeMap($L)", tlt,
+                                    stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1,
+                                            StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
+                        }
+                        else {
+                            cbb.add("new $T {$L}", typenameFields[j],
+                                    stringLiterals(StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
+
+                        }
+                    }
                     else
                         cbb.add("$S", reader.contentLines[i][j]);
                 }
@@ -119,7 +184,7 @@ public class CodeWriter
 
         tb.addField(FieldSpec.builder(atn, "ENTRIES", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
         TypeSpec t = tb.build();
-        return JavaFile.builder(packageName, t).build();
+        return JavaFile.builder(packageName, t).addStaticImport(tlt, "makeMap").skipJavaLangImports(true).build();
     }
 
     private static String characterLiteral(char c) {
@@ -165,5 +230,115 @@ public class CodeWriter
         result.append('"');
         return result.toString();
     }
+    /**
+     * Returns the string literals, separated by ", " representing {@code values}, including wrapping double quotes.
+     * From CodePoet source (com.squareup.javapoet.Util), with small changes.
+     * @param values the values to escape as a String
+     * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
+     */
+    private static String stringLiterals(String... values) {
+        StringBuilder result = new StringBuilder(values.length * 8);
+        for (int s = 0; s < values.length;) {
+            String value = values[s];
+            result.append('"');
+            for (int i = 0; i < value.length(); i++) {
+                char c = value.charAt(i);
+                // trivial case: single quote must not be escaped
+                if (c == '\'') {
+                    result.append("'");
+                    continue;
+                }
+                // trivial case: double quotes must be escaped
+                if (c == '\"') {
+                    result.append("\\\"");
+                    continue;
+                }
+                // default case: just let character literal do its work
+                result.append(characterLiteral(c));
+            }
+            if(++s < values.length)
+                result.append("\", ");
+            else
+                result.append('"');
+        }
+        return result.toString();
+    }
+    /**
+     * Returns the string literals, separated by ", " representing {@code values}, including wrapping double quotes.
+     * From CodePoet source (com.squareup.javapoet.Util), with small changes.
+     * @param values the values to escape as a String
+     * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
+     */
+    private static String stringLiterals(int alternationCode, String... values) {
+        StringBuilder result = new StringBuilder(values.length * 8);
+        if(alternationCode > 1)
+            return stringLiterals(values);
+        if(alternationCode < 0)
+            return StringKit.join(", ", values);
+        for (int s = 0; s < values.length;) {
+            if((s & 1) == alternationCode) {
+                String value = values[s];
+                result.append('"');
+                for (int i = 0; i < value.length(); i++) {
+                    char c = value.charAt(i);
+                    // trivial case: single quote must not be escaped
+                    if (c == '\'') {
+                        result.append("'");
+                        continue;
+                    }
+                    // trivial case: double quotes must be escaped
+                    if (c == '\"') {
+                        result.append("\\\"");
+                        continue;
+                    }
+                    // default case: just let character literal do its work
+                    result.append(characterLiteral(c));
+                }
+                if (++s < values.length)
+                    result.append("\", ");
+                else
+                    result.append('"');
+            }
+            else
+            {
+                if (s + 1 < values.length)
+                    result.append(values[s++]).append(", ");
+                else
+                    result.append(values[s++]);
+            }
+        }
+        return result.toString();
+    }
+    /**
+     * Makes a LinkedHashMap (LHM) with key and value types inferred from the types of k0 and v0, and considers all
+     * parameters key-value pairs, casting the Objects at positions 0, 2, 4... etc. to K and the objects at positions
+     * 1, 3, 5... etc. to V. If rest has an odd-number length, then it discards the last item. If any pair of items in
+     * rest cannot be cast to the correct type of K or V, then this inserts nothing for that pair.
+     * @param k0 the first key; used to infer the types of other keys if generic parameters aren't specified.
+     * @param v0 the first value; used to infer the types of other values if generic parameters aren't specified.
+     * @param rest an array or vararg of keys and values in pairs; should contain alternating K, V, K, V... elements
+     * @param <K> the type of keys in the returned LinkedHashMap; if not specified, will be inferred from k0
+     * @param <V> the type of values in the returned LinkedHashMap; if not specified, will be inferred from v0
+     * @return a freshly-made LinkedHashMap with K keys and V values, using k0, v0, and the contents of rest to fill it
+     */
+    @SuppressWarnings("unchecked")
+    public static <K, V> LinkedHashMap<K, V> makeMap(K k0, V v0, Object... rest)
+    {
+        if(rest == null || rest.length == 0)
+        {
+            LinkedHashMap<K, V> lhm = new LinkedHashMap<>(2);
+            lhm.put(k0, v0);
+            return lhm;
+        }
+        LinkedHashMap<K, V> lhm = new LinkedHashMap<>(1 + (rest.length / 2));
+        lhm.put(k0, v0);
 
+        for (int i = 0; i < rest.length - 1; i+=2) {
+            try {
+                lhm.put((K) rest[i], (V) rest[i + 1]);
+            }catch (ClassCastException ignored) {
+            }
+        }
+        return lhm;
+    }
 }

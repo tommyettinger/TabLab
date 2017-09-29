@@ -9,9 +9,9 @@ import java.io.File;
  */
 public class TSVReaderTest {
     private String input = "com.github.tommyettinger.tablab.generated.Job\n" +
-            "name:str\tdescription:str\toffense:int\tdefense:int\tskills:str[;;]\tranks:int[,]\n" +
-            "Abjurer\tA defensive mage\t1\t9\tHaze;;Mist Shackles;;Barricade;;Stony Shield;;Body of Iron\t3,1,2,3,1\n" +
-            "Ninja\tA nimble assassin\t9\t1\tVanish;;Poison;;Smoke Bomb;;Ninjutsu\t4,2,1,3\n";
+            "name:str\tdescription:str\toffense:int\tdefense:int\ttalents:str[;;]\tskills:str{,}int\n" +
+            "Abjurer\tA defensive mage\t1\t9\tHaze;;Warding Tome\tMist Shackles,1,Barricade,2,Stony Shield,3,Body of Iron,1\n" +
+            "Ninja\tA nimble assassin\t9\t1\tPoison;;Martial Arts\tVanish,2,Smoke Bomb,1,Shadow Dagger,2\n";
 
     @Test
     public void testBasics()
