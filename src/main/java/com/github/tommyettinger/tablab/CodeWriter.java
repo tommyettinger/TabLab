@@ -109,7 +109,7 @@ public class CodeWriter
                     mapStart = section.indexOf('{'), mapEnd = section.indexOf('}'),
                     typeLen = Math.max(arrayStart, mapStart);
             if(typeLen < 0) {
-                typename = typenames.getOrDefault(section.substring(colon + 1, section.length()), STR);
+                typename = colon < 0 ? STR : typenames.getOrDefault(section.substring(colon + 1, section.length()), STR);
                 stringFields[i] = typename.equals(STR);
             }
             else if(arrayStart >= 0) {
@@ -127,7 +127,7 @@ public class CodeWriter
                 arraySeparators[i] = section.substring(mapStart+1, mapEnd);
             }
             typenameFields[i] = typename;
-            field = section.substring(0, colon);
+            field = StringKit.safeSubstring(section, 0, colon);
             tb.addField(typename, field, mods);
             make.addParameter(typename, field).addStatement("this.$N = $N", field, field);
         }
