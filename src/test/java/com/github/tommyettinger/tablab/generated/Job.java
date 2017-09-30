@@ -1,8 +1,8 @@
 package com.github.tommyettinger.tablab.generated;
 
-import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
-
 import java.util.Map;
+
+import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
 
 public class Job {
   public static final Job[] ENTRIES = new Job[] {

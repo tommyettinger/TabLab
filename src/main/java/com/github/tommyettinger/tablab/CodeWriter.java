@@ -7,13 +7,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -64,26 +62,20 @@ public class CodeWriter
         }
     }
 
-    public void writeTo(TSVReader reader, File file)
-    {
+    public void writeTo(TSVReader reader, File file) {
         try {
             Path p = file.toPath(), outputDirectory = p;
             write(reader).writeTo(p);
-            try {
-                if (!reader.packageName.isEmpty()) {
-                    for (String packageComponent : StringKit.split(reader.packageName, ".")) {
-                        outputDirectory = outputDirectory.resolve(packageComponent);
-                    }
+            if (!reader.packageName.isEmpty()) {
+                for (String packageComponent : StringKit.split(reader.packageName, ".")) {
+                    outputDirectory = outputDirectory.resolve(packageComponent);
                 }
+            }
 
-                Path outputPath = outputDirectory.resolve("TabLabTools.java");
-                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath), UTF_8)) {
-                    writer.write(new String(
-                            Files.readAllBytes(Paths.get(getClass().getResource("/TabLabTools.txt").toURI())),
-                            StandardCharsets.UTF_8)
-                            .replaceFirst("###~~~###", Matcher.quoteReplacement(reader.packageName)));
-                }
-            } catch (URISyntaxException ignored) {
+            try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputDirectory.resolve("TabLabTools.java")), UTF_8)) {
+                writer.write(
+                        new Scanner(CodeWriter.class.getResourceAsStream("/TabLabTools.txt"), "UTF-8").useDelimiter("\\A").next()
+                        .replaceFirst("###~~~###", Matcher.quoteReplacement(reader.packageName)));
             }
 
         } catch (IOException e) {
