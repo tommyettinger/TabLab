@@ -2,6 +2,9 @@ package com.github.tommyettinger.tablab;
 
 import regexodus.Pattern;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -37,6 +40,15 @@ public class TSVReader {
                 contentLines[i][j] = StringKit.safeSubstring(temp, idx+1, idx = temp.indexOf('\t', idx+1));
             }
             contentLines[i][headerLine.length-1] = temp.substring(idx+1);
+        }
+    }
+
+    public void readFile(String filename)
+    {
+        try {
+            read(Files.readAllLines(Paths.get(filename)));
+        } catch (IOException e) {
+            System.err.println("Could not read file (check that path is correct): " + filename);
         }
     }
 }

@@ -35,4 +35,14 @@ public class TSVReaderTest {
         writer.writeTo(reader, new File("src/test/java/"));
 
     }
+
+    @Test
+    public void testFile()
+    {
+        TSVReader reader = new TSVReader();
+        reader.readFile("src/test/resources/Weapon.txt");
+        CodeWriter writer = new CodeWriter();
+        System.out.println(writer.write(reader));
+        writer.writeTo(reader, new File("src/test/java/"));
+    }
 }
