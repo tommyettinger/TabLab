@@ -12,10 +12,10 @@ import java.util.List;
  */
 public class TSVReader {
     public String[] headerLine;
-    public String[] allLines;
     public String[][] contentLines;
     public String packageName;
     public String name;
+    public String keyColumn;
     public TSVReader()
     {
     }
@@ -29,8 +29,20 @@ public class TSVReader {
         String line = allLines.get(0);
         int idx = line.lastIndexOf('.');
         packageName = StringKit.safeSubstring(line, 0, idx);
-        name = StringKit.safeSubstring(line, idx+1, StringKit.indexOf(line, StringKit.whitespacePattern));
+        name = StringKit.safeSubstring(line, idx+1, idx = StringKit.indexOf(line, StringKit.whitespacePattern));
+        if(idx < 0)
+            keyColumn = "void";
+        else
+        {
+            keyColumn = StringKit.safeSubstring(line,
+                    idx = StringKit.indexOf(line, StringKit.nonSpacePattern, idx),
+                    StringKit.indexOf(line, StringKit.whitespacePattern, idx));
+            if("void".equalsIgnoreCase(keyColumn))
+                keyColumn = "";
+        }
         headerLine = StringKit.split(allLines.get(1), "\t");
+        if("void".equals(keyColumn))
+            keyColumn = headerLine[0];
         contentLines = new String[allLines.size() - 2][headerLine.length];
         String temp;
         for (int i = 0; i < contentLines.length; i++) {

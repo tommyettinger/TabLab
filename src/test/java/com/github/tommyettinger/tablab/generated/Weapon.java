@@ -1,5 +1,7 @@
 package com.github.tommyettinger.tablab.generated;
 
+import java.util.Map;
+
 import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
 
 public class Weapon {
@@ -105,6 +107,40 @@ public class Weapon {
     new Weapon("Wrench", 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 3, 1, 0, 0, 0, 0, 0, 2, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 5, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 1, 4),
     new Weapon("Yoyo", 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 2, 4, 4, 4, 0, 0, 0, 0, 0, 0, 2, 4, 2, 2, 0, 0, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, -2, 1, -2),
   };
+
+  public static final Map<String, Weapon> MAPPING = makeMap(
+  "Axe", ENTRIES[0], "Backpack", ENTRIES[1], "Ball", ENTRIES[2], "Barrel", ENTRIES[3],
+  "Bat", ENTRIES[4], "Belt", ENTRIES[5], "Blade", ENTRIES[6], "Bomb",
+  ENTRIES[7], "Book", ENTRIES[8], "Boomerang", ENTRIES[9], "Bow", ENTRIES[10],
+  "Bowling Pin", ENTRIES[11], "Box", ENTRIES[12], "Briefcase", ENTRIES[13],
+  "Broom", ENTRIES[14], "Can", ENTRIES[15], "Candlestick", ENTRIES[16],
+  "Cane", ENTRIES[17], "Cape", ENTRIES[18], "Card", ENTRIES[19], "Cell Phone",
+  ENTRIES[20], "Chain", ENTRIES[21], "Chainsaw", ENTRIES[22], "Chair",
+  ENTRIES[23], "Crossbow", ENTRIES[24], "Crowbar", ENTRIES[25], "Dart", ENTRIES[26],
+  "Dice", ENTRIES[27], "Discus", ENTRIES[28], "Dumbbell", ENTRIES[29],
+  "Fan", ENTRIES[30], "Firework", ENTRIES[31], "Fist", ENTRIES[32], "Flail",
+  ENTRIES[33], "Flamethrower", ENTRIES[34], "Flashlight", ENTRIES[35], "Flute",
+  ENTRIES[36], "Fork", ENTRIES[37], "Frying Pan", ENTRIES[38], "Garbage Bin",
+  ENTRIES[39], "Golf Club", ENTRIES[40], "Guitar", ENTRIES[41], "Hairdryer",
+  ENTRIES[42], "Hammer", ENTRIES[43], "Hat", ENTRIES[44], "Hatchet",
+  ENTRIES[45], "Hockey Stick", ENTRIES[46], "Hook", ENTRIES[47], "Hoop",
+  ENTRIES[48], "Hose", ENTRIES[49], "Jumprope", ENTRIES[50], "Knife", ENTRIES[51],
+  "Lamp", ENTRIES[52], "Laptop", ENTRIES[53], "Lasso", ENTRIES[54], "Leaf Blower",
+  ENTRIES[55], "Machete", ENTRIES[56], "Microphone", ENTRIES[57], "Mop",
+  ENTRIES[58], "Mouse", ENTRIES[59], "Mug", ENTRIES[60], "Nail Gun", ENTRIES[61],
+  "Needles", ENTRIES[62], "Night Stick", ENTRIES[63], "Nunchucks", ENTRIES[64],
+  "Paddle", ENTRIES[65], "Pistol", ENTRIES[66], "Plank", ENTRIES[67],
+  "Plunger", ENTRIES[68], "Pole", ENTRIES[69], "Rake", ENTRIES[70], "Ray Gun",
+  ENTRIES[71], "Razor", ENTRIES[72], "Rifle", ENTRIES[73], "Rock", ENTRIES[74],
+  "Rolling Pin", ENTRIES[75], "Ruler", ENTRIES[76], "Scissors", ENTRIES[77],
+  "Screwdriver", ENTRIES[78], "Scythe", ENTRIES[79], "Shield", ENTRIES[80],
+  "Shoe", ENTRIES[81], "Shotgun", ENTRIES[82], "Shovel", ENTRIES[83],
+  "Skateboard", ENTRIES[84], "Spear", ENTRIES[85], "Spray Paint", ENTRIES[86],
+  "Stapler", ENTRIES[87], "Steam Iron", ENTRIES[88], "Stun Gun", ENTRIES[89],
+  "Table", ENTRIES[90], "Throwing Star", ENTRIES[91], "Tongs", ENTRIES[92],
+  "Trumpet", ENTRIES[93], "Umbrella", ENTRIES[94], "Vacuum", ENTRIES[95],
+  "Welding Torch", ENTRIES[96], "Whip", ENTRIES[97], "Wrench", ENTRIES[98],
+  "Yoyo", ENTRIES[99]);
 
   public String name;
 

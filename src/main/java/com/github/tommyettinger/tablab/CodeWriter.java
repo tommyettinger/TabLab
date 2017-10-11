@@ -88,21 +88,20 @@ public class CodeWriter
         String packageName = reader.packageName;
         if(packageName == null || packageName.isEmpty())
             packageName = reader.packageName = "tab.lab.generated";
-//        TypeSpec.Builder toolsB = TypeSpec.classBuilder("TabLabTools").addModifiers(mods);
-//        MethodSpec.Builder toolsM = MethodSpec.methodBuilder("makeMap").addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-//                .addTypeVariable(TypeVariableName.get("K")).addTypeVariable(TypeVariableName.get("V"));
         ClassName tlt = ClassName.get(packageName, "TabLabTools");
         TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods);
         MethodSpec.Builder make = MethodSpec.constructorBuilder().addModifiers(mods);
         String section, field;
         int fieldCount = reader.headerLine.length;
-        TypeName typename, typenameExtra1, typenameExtra2;
+        TypeName typename, typenameExtra1 = null, typenameExtra2 = null;
         TypeName[] typenameFields = new TypeName[fieldCount];
         TypeName[] typenameExtras1 = new TypeName[fieldCount];
         TypeName[] typenameExtras2 = new TypeName[fieldCount];
         boolean[] stringFields = new boolean[fieldCount];
         boolean[] stringExtras = new boolean[fieldCount];
         String[] arraySeparators = new String[fieldCount];
+        ParameterizedTypeName mapTypename = null;
+        int mapKeyIndex = -1;
         for (int i = 0; i < fieldCount; i++) {
             section = reader.headerLine[i];
             int colon = section.indexOf(':'), arrayStart = section.indexOf('['),
@@ -129,52 +128,62 @@ public class CodeWriter
             typenameFields[i] = typename;
             field = StringKit.safeSubstring(section, 0, colon);
             tb.addField(typename, field, mods);
+            if(field.equals(reader.keyColumn)) {
+                if (typeLen < 0) {
+                    mapTypename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), typename, ClassName.get(packageName, reader.name));
+                    mapKeyIndex = i;
+                }
+            }
             make.addParameter(typename, field).addStatement("this.$N = $N", field, field);
         }
         tb.addMethod(make.build());
         ClassName cn = ClassName.get(packageName, reader.name);
-        ArrayTypeName atn = ArrayTypeName.of(cn);
-        CodeBlock.Builder cbb = CodeBlock.builder();
-        cbb.beginControlFlow("new $T", atn);
-        for (int i = 0; i < reader.contentLines.length; i++) {
-            cbb.add("new $T(", cn);
-            int j = 0;
-            for (; j < fieldCount; j++) {
-                if(stringFields[j] || stringExtras[j])
-                {
-                    if(arraySeparators[j] != null) {
-                        if(typenameExtras1[j] != null)
-                        {
-                            if(!reader.contentLines[i][j].contains(arraySeparators[j]))
+        if(reader.contentLines.length > 0) {
+            ArrayTypeName atn = ArrayTypeName.of(cn);
+            CodeBlock.Builder cbb = CodeBlock.builder();
+            cbb.beginControlFlow("new $T", atn);
+            for (int i = 0; i < reader.contentLines.length; i++) {
+                cbb.add("new $T(", cn);
+                int j = 0;
+                for (; j < fieldCount; j++) {
+                    if (arraySeparators[j] != null) {
+                        if (typenameExtras1[j] != null) {
+                            if (!reader.contentLines[i][j].contains(arraySeparators[j]))
                                 cbb.add("new $T<$T, $T>()", LinkedHashMap.class, typenameExtras1[j], typenameExtras2[j]);
                             else
                                 cbb.add("$T.makeMap($L)", tlt,
-                                    stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1,
-                                            StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
-                        }
-                        else {
+                                        stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1, 80,
+                                                StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
+                        } else {
                             cbb.add("new $T {$L}", typenameFields[j],
-                                    stringLiterals(StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
-
+                                    stringLiterals((stringFields[j] ? 2 : -1), 80, StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
                         }
-                    }
-                    else
+                    } else if (stringFields[j] || stringExtras[j]) {
                         cbb.add("$S", reader.contentLines[i][j]);
+                    } else {
+                        cbb.add("$L", reader.contentLines[i][j]);
+                    }
+                    if (j < fieldCount - 1)
+                        cbb.add(", ");
                 }
-                else if(arraySeparators[j] != null)
-                    cbb.add("new $T {$L}", typenameFields[j], reader.contentLines[i][j].replace(arraySeparators[j], ", "));
-                else
-                    cbb.add("$L", reader.contentLines[i][j]);
-                if(j < fieldCount - 1)
-                    cbb.add(", ");
+
+                cbb.add("),\n");
             }
+            cbb.unindent();
+            cbb.add("}");
 
-            cbb.add("),\n");
+            tb.addField(FieldSpec.builder(atn, "ENTRIES", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
+            if (mapKeyIndex >= 0) {
+                cbb = CodeBlock.builder();
+                String[] mapStuff = new String[reader.contentLines.length * 2];
+                for (int i = 0; i < reader.contentLines.length; i++) {
+                    mapStuff[i * 2] = reader.contentLines[i][mapKeyIndex];
+                    mapStuff[i * 2 + 1] = "ENTRIES[" + i + "]";
+                }
+                cbb.add("$T.makeMap(\n$L)", tlt, stringLiterals((stringFields[mapKeyIndex] ? 0 : -1), 80, mapStuff));
+                tb.addField(FieldSpec.builder(mapTypename, "MAPPING", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
+            }
         }
-        cbb.unindent();
-        cbb.add("}");
-
-        tb.addField(FieldSpec.builder(atn, "ENTRIES", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
         TypeSpec t = tb.build();
         return JavaFile.builder(packageName, t).addStaticImport(tlt, "makeMap").skipJavaLangImports(true).build();
     }
@@ -263,12 +272,8 @@ public class CodeWriter
      */
     private static String stringLiterals(int alternationCode, String... values) {
         StringBuilder result = new StringBuilder(values.length * 8);
-        if(alternationCode > 1)
-            return stringLiterals(values);
-        if(alternationCode < 0)
-            return StringKit.join(", ", values);
         for (int s = 0; s < values.length;) {
-            if((s & 1) == alternationCode) {
+            if(alternationCode >= 2 || (s & 1) == alternationCode) {
                 String value = values[s];
                 result.append('"');
                 for (int i = 0; i < value.length(); i++) {
@@ -301,6 +306,73 @@ public class CodeWriter
         }
         return result.toString();
     }
+    /**
+     * Returns the string literals, separated by ", " representing {@code values}, including wrapping double quotes.
+     * From CodePoet source (com.squareup.javapoet.Util), with small changes.
+     * @param values the values to escape as a String
+     * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
+     */
+    private static String stringLiterals(int alternationCode, int lineLength, String... values) {
+        StringBuilder result = new StringBuilder(values.length * 8),
+                work = new StringBuilder(40 + lineLength);
+        int latestBreak = 0;
+        String value;
+        for (int s = 0; s < values.length;) {
+            value = values[s];
+            if(alternationCode >= 2 || (s & 1) == alternationCode) {
+                work.setLength(0);
+                work.append('"');
+                for (int i = 0; i < value.length(); i++) {
+                    char c = value.charAt(i);
+                    // trivial case: single quote must not be escaped
+                    if (c == '\'') {
+                        work.append("'");
+                        continue;
+                    }
+                    // trivial case: double quotes must be escaped
+                    if (c == '\"') {
+                        work.append("\\\"");
+                        continue;
+                    }
+                    // default case: just let character literal do its work
+                    work.append(characterLiteral(c));
+                }
+                if (++s < values.length) {
+                    work.append("\",");
+                    if(result.length() + work.length() + 1 - latestBreak < lineLength)
+                        result.append(work).append(' ');
+                    else
+                    {
+                        latestBreak = result.length();
+                        result.append(work).append('\n');
+                    }
+                } else {
+                    result.append(work).append('"');
+                }
+            }
+            else
+            {
+                if (++s < values.length) {
+                    if (result.length() + value.length() + 2 - latestBreak < lineLength)
+                        result.append(value).append(", ");
+                    else if (result.length() + value.length() + 1 - latestBreak < lineLength)
+                    {
+                        result.append(value).append(',');
+                        latestBreak = result.length();
+                        result.append('\n');
+                    }
+                    else {
+                        latestBreak = result.length();
+                        result.append(value).append(",\n");
+                    }
+                } else {
+                    result.append(value);
+                }
+            }
+        }
+        return result.toString();
+    }
+
     /**
      * Makes a LinkedHashMap (LHM) with key and value types inferred from the types of k0 and v0, and considers all
      * parameters key-value pairs, casting the Objects at positions 0, 2, 4... etc. to K and the objects at positions

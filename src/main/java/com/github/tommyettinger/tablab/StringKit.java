@@ -325,7 +325,8 @@ public class StringKit {
         if(beginIndex > endIndex) return "";
         return source.substring(beginIndex, endIndex);
     }
-    public static final Pattern whitespacePattern = Pattern.compile("\\s+");
+    public static final Pattern whitespacePattern = Pattern.compile("\\s+"),
+            nonSpacePattern = Pattern.compile("\\S+");
     private static final Matcher matcher = new Matcher(whitespacePattern);
     public static int indexOf(CharSequence text, Pattern regex, int beginIndex)
     {
