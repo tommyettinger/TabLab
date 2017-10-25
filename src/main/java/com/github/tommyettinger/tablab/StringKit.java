@@ -217,8 +217,8 @@ public class StringKit {
 
     /**
      * Joins the boolean array {@code elements} without delimiters into a String, using "1" for true and "0" for false.
-     * @param elements
-     * @return
+     * @param elements an array or vararg of booleans
+     * @return a String using 1 for true elements and 0 for false, or "N" if elements is null
      */
     public static String joinAlt(boolean... elements) {
         if (elements == null) return "N";

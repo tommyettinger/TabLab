@@ -41,8 +41,8 @@ public class TSVReader {
                 keyColumn = "";
         }
         headerLine = StringKit.split(allLines.get(1), "\t");
-        if("void".equals(keyColumn))
-            keyColumn = headerLine[0];
+        //if("void".equals(keyColumn))
+        //    keyColumn = headerLine[0];
         contentLines = new String[allLines.size() - 2][headerLine.length];
         String temp;
         for (int i = 0; i < contentLines.length; i++) {

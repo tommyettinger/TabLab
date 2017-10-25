@@ -26,6 +26,7 @@ public class CodeWriter
     }
     private static final Modifier[] mods = {Modifier.PUBLIC};
     private static final TypeName STR = TypeName.get(String.class);
+    private static final ClassName VOI = ClassName.get(Void.class);
     public static final HashMap<String, TypeName> typenames = new HashMap<>(32);
     static {
         typenames.put("String", STR);
@@ -91,7 +92,7 @@ public class CodeWriter
         ClassName tlt = ClassName.get(packageName, "TabLabTools");
         TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods);
         MethodSpec.Builder make = MethodSpec.constructorBuilder().addModifiers(mods);
-        String section, field;
+        String section, field, tmp;
         int fieldCount = reader.headerLine.length;
         TypeName typename, typenameExtra1 = null, typenameExtra2 = null;
         TypeName[] typenameFields = new TypeName[fieldCount];
@@ -99,6 +100,8 @@ public class CodeWriter
         TypeName[] typenameExtras2 = new TypeName[fieldCount];
         boolean[] stringFields = new boolean[fieldCount];
         boolean[] stringExtras = new boolean[fieldCount];
+        ClassName[] crossFields = new ClassName[fieldCount];
+        ClassName[] crossExtras = new ClassName[fieldCount];
         String[] arraySeparators = new String[fieldCount];
         ParameterizedTypeName mapTypename = null;
         int mapKeyIndex = -1;
@@ -108,18 +111,22 @@ public class CodeWriter
                     mapStart = section.indexOf('{'), mapEnd = section.indexOf('}'),
                     typeLen = Math.max(arrayStart, mapStart);
             if(typeLen < 0) {
-                typename = colon < 0 ? STR : typenames.getOrDefault(section.substring(colon + 1, section.length()), STR);
+                crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
+                typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
                 stringFields[i] = typename.equals(STR);
             }
             else if(arrayStart >= 0) {
-                typename = typenames.getOrDefault(section.substring(colon + 1, arrayStart), STR);
+                crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, arrayStart)) ? VOI : ClassName.get(packageName, tmp);
+                typename = typenames.getOrDefault(tmp, crossFields[i]);
                 stringFields[i] = typename.equals(STR);
                 typename = ArrayTypeName.of(typename);
                 arraySeparators[i] = section.substring(arrayStart+1, section.indexOf(']'));
             }
             else { // map case
-                typenameExtras1[i] = typenameExtra1 = typenames.getOrDefault(section.substring(colon + 1, mapStart), STR).box();
-                typenameExtras2[i] = typenameExtra2 = typenames.getOrDefault(section.substring(mapEnd + 1, section.length()), STR).box();
+                crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, mapStart)) ? VOI : ClassName.get(packageName, tmp);
+                typenameExtras1[i] = typenameExtra1 = typenames.getOrDefault(tmp, crossFields[i]).box();
+                crossExtras[i] = typenames.containsKey(tmp = section.substring(mapEnd + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
+                typenameExtras2[i] = typenameExtra2 = typenames.getOrDefault(tmp, crossExtras[i]).box();
                 stringFields[i] = typenameExtra1.equals(STR);
                 stringExtras[i] = typenameExtra2.equals(STR);
                 typename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), typenameExtra1, typenameExtra2);
@@ -128,9 +135,9 @@ public class CodeWriter
             typenameFields[i] = typename;
             field = StringKit.safeSubstring(section, 0, colon);
             tb.addField(typename, field, mods);
-            if(field.equals(reader.keyColumn)) {
+            if(field.equals(reader.keyColumn) && typename.equals(STR)) {
                 if (typeLen < 0) {
-                    mapTypename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), typename, ClassName.get(packageName, reader.name));
+                    mapTypename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), STR, ClassName.get(packageName, reader.name));
                     mapKeyIndex = i;
                 }
             }
@@ -152,11 +159,12 @@ public class CodeWriter
                                 cbb.add("new $T<$T, $T>()", LinkedHashMap.class, typenameExtras1[j], typenameExtras2[j]);
                             else
                                 cbb.add("$T.makeMap($L)", tlt,
-                                        stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1, 80,
+                                        stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1, crossFields[j], crossExtras[j], 80,
                                                 StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
                         } else {
                             cbb.add("new $T {$L}", typenameFields[j],
-                                    stringLiterals((stringFields[j] ? 2 : -1), 80, StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
+                                    stringLiterals((stringFields[j] ? 2 : -1), crossFields[j], null,
+                                            80, StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
                         }
                     } else if (stringFields[j] || stringExtras[j]) {
                         cbb.add("$S", reader.contentLines[i][j]);
@@ -180,7 +188,7 @@ public class CodeWriter
                     mapStuff[i * 2] = reader.contentLines[i][mapKeyIndex];
                     mapStuff[i * 2 + 1] = "ENTRIES[" + i + "]";
                 }
-                cbb.add("$T.makeMap(\n$L)", tlt, stringLiterals((stringFields[mapKeyIndex] ? 0 : -1), 80, mapStuff));
+                cbb.add("$T.makeMap(\n$L)", tlt, stringLiterals(0, VOI, VOI, 80, mapStuff)); // alternationCode: (stringFields[mapKeyIndex] ? 0 : -1)
                 tb.addField(FieldSpec.builder(mapTypename, "MAPPING", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
             }
         }
@@ -312,14 +320,47 @@ public class CodeWriter
      * @param values the values to escape as a String
      * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
      */
-    private static String stringLiterals(int alternationCode, int lineLength, String... values) {
+    private static String stringLiterals(int alternationCode, ClassName cross1, ClassName cross2, int lineLength, String... values) {
         StringBuilder result = new StringBuilder(values.length * 8),
                 work = new StringBuilder(40 + lineLength);
         int latestBreak = 0;
         String value;
         for (int s = 0; s < values.length;) {
             value = values[s];
-            if(alternationCode >= 2 || (s & 1) == alternationCode) {
+            if((cross2 == null || (s & 1) == 0) && !VOI.equals(cross1)){
+                work.setLength(0);
+                work.append(cross1.simpleName()).append(".MAPPING.get(\"").append(value).append("\")");
+                if (++s < values.length) {
+                    work.append(",");
+                    if(result.length() + work.length() + 1 - latestBreak < lineLength)
+                        result.append(work).append(' ');
+                    else
+                    {
+                        latestBreak = result.length();
+                        result.append(work).append('\n');
+                    }
+                } else {
+                    result.append(work);
+                }
+            }
+            else if((s & 1) == 1 && cross2 != null && !VOI.equals(cross2)){
+                work.setLength(0);
+                work.append(cross2.packageName()).append('.').append(cross2.simpleName()).append(".MAPPING.get(\"").append(value).append("\")");
+                if (++s < values.length) {
+                    work.append(",");
+                    if(result.length() + work.length() + 1 - latestBreak < lineLength)
+                        result.append(work).append(' ');
+                    else
+                    {
+                        latestBreak = result.length();
+                        result.append(work).append('\n');
+                    }
+                } else {
+                    result.append(work);
+                }
+            }
+
+            else if(alternationCode >= 2 || (s & 1) == alternationCode) {
                 work.setLength(0);
                 work.append('"');
                 for (int i = 0; i < value.length(); i++) {

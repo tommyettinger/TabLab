@@ -1,14 +1,17 @@
 package com.github.tommyettinger.tablab.generated;
 
-import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
-
 import java.util.Map;
+
+import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
 
 public class Job {
   public static final Job[] ENTRIES = new Job[] {
-    new Job("Abjurer", "A defensive mage", 1, 9, new String[] {"Haze", "Warding Tome"}, makeMap("Mist Shackles", 1, "Barricade", 2, "Stony Shield", 3, "Body of Iron", 1)),
-    new Job("Ninja", "A nimble assassin", 9, 1, new String[] {"Poison", "Martial Arts"}, makeMap("Vanish", 2, "Smoke Bomb", 1, "Shadow Dagger", 2)),
+    new Job("Abjurer", "A defensive mage", 1, 9, new Talent[] {Talent.MAPPING.get("Haze"), Talent.MAPPING.get("Warding Tome")}, makeMap("Mist Shackles", 1, "Barricade", 2, "Stony Shield", 3, "Body of Iron", 1)),
+    new Job("Ninja", "A nimble assassin", 9, 1, new Talent[] {Talent.MAPPING.get("Poison"), Talent.MAPPING.get("Martial Arts")}, makeMap("Vanish", 2, "Smoke Bomb", 1, "Shadow Dagger", 2)),
   };
+
+  public static final Map<String, Job> MAPPING = makeMap(
+  "Abjurer", ENTRIES[0], "Ninja", ENTRIES[1]);
 
   public String name;
 
@@ -18,11 +21,11 @@ public class Job {
 
   public int defense;
 
-  public String[] talents;
+  public Talent[] talents;
 
   public Map<String, Integer> skills;
 
-  public Job(String name, String description, int offense, int defense, String[] talents,
+  public Job(String name, String description, int offense, int defense, Talent[] talents,
       Map<String, Integer> skills) {
     this.name = name;
     this.description = description;
