@@ -1,8 +1,8 @@
 package com.github.tommyettinger.tablab.generated;
 
-import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
-
 import java.util.Map;
+
+import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
 
 public class Talent {
   public static final Talent[] ENTRIES = new Talent[] {
@@ -23,5 +23,9 @@ public class Talent {
   public Talent(String name, String description) {
     this.name = name;
     this.description = description;
+  }
+
+  public static Talent get(String item) {
+    return MAPPING.get(item);
   }
 }

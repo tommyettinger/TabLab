@@ -105,6 +105,7 @@ public class CodeWriter
         String[] arraySeparators = new String[fieldCount];
         ParameterizedTypeName mapTypename = null;
         int mapKeyIndex = -1;
+        ClassName myName = ClassName.get(packageName, reader.name);
         for (int i = 0; i < fieldCount; i++) {
             section = reader.headerLine[i];
             int colon = section.indexOf(':'), arrayStart = section.indexOf('['),
@@ -137,7 +138,7 @@ public class CodeWriter
             tb.addField(typename, field, mods);
             if(field.equals(reader.keyColumn) && typename.equals(STR)) {
                 if (typeLen < 0) {
-                    mapTypename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), STR, ClassName.get(packageName, reader.name));
+                    mapTypename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), STR, myName);
                     mapKeyIndex = i;
                 }
             }
@@ -190,6 +191,8 @@ public class CodeWriter
                 }
                 cbb.add("$T.makeMap(\n$L)", tlt, stringLiterals(0, VOI, VOI, 80, mapStuff)); // alternationCode: (stringFields[mapKeyIndex] ? 0 : -1)
                 tb.addField(FieldSpec.builder(mapTypename, "MAPPING", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
+                MethodSpec.Builder mb = MethodSpec.methodBuilder("get").addModifiers(Modifier.PUBLIC, Modifier.STATIC).returns(myName).addParameter(STR, "item").addCode("return MAPPING.get($N);\n", "item");
+                tb.addMethod(mb.build());
             }
         }
         TypeSpec t = tb.build();
@@ -329,7 +332,7 @@ public class CodeWriter
             value = values[s];
             if((cross2 == null || (s & 1) == 0) && !VOI.equals(cross1)){
                 work.setLength(0);
-                work.append(cross1.simpleName()).append(".MAPPING.get(\"").append(value).append("\")");
+                work.append(cross1.simpleName()).append(".get(\"").append(value).append("\")");
                 if (++s < values.length) {
                     work.append(",");
                     if(result.length() + work.length() + 1 - latestBreak < lineLength)
@@ -345,7 +348,7 @@ public class CodeWriter
             }
             else if((s & 1) == 1 && cross2 != null && !VOI.equals(cross2)){
                 work.setLength(0);
-                work.append(cross2.packageName()).append('.').append(cross2.simpleName()).append(".MAPPING.get(\"").append(value).append("\")");
+                work.append(cross2.packageName()).append('.').append(cross2.simpleName()).append(".get(\"").append(value).append("\")");
                 if (++s < values.length) {
                     work.append(",");
                     if(result.length() + work.length() + 1 - latestBreak < lineLength)

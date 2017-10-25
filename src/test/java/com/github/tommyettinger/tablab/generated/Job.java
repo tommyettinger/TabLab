@@ -6,8 +6,8 @@ import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
 
 public class Job {
   public static final Job[] ENTRIES = new Job[] {
-    new Job("Abjurer", "A defensive mage", 1, 9, new Talent[] {Talent.MAPPING.get("Haze"), Talent.MAPPING.get("Warding Tome")}, makeMap("Mist Shackles", 1, "Barricade", 2, "Stony Shield", 3, "Body of Iron", 1)),
-    new Job("Ninja", "A nimble assassin", 9, 1, new Talent[] {Talent.MAPPING.get("Poison"), Talent.MAPPING.get("Martial Arts")}, makeMap("Vanish", 2, "Smoke Bomb", 1, "Shadow Dagger", 2)),
+    new Job("Abjurer", "A defensive mage", 1, 9, new Talent[] {Talent.get("Haze"), Talent.get("Warding Tome")}, makeMap("Mist Shackles", 1, "Barricade", 2, "Stony Shield", 3, "Body of Iron", 1)),
+    new Job("Ninja", "A nimble assassin", 9, 1, new Talent[] {Talent.get("Poison"), Talent.get("Martial Arts")}, makeMap("Vanish", 2, "Smoke Bomb", 1, "Shadow Dagger", 2)),
   };
 
   public static final Map<String, Job> MAPPING = makeMap(
@@ -33,5 +33,9 @@ public class Job {
     this.defense = defense;
     this.talents = talents;
     this.skills = skills;
+  }
+
+  public static Job get(String item) {
+    return MAPPING.get(item);
   }
 }
