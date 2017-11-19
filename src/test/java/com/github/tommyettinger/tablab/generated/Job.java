@@ -1,17 +1,18 @@
 package com.github.tommyettinger.tablab.generated;
 
-import java.util.Map;
-
 import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
+
+import java.util.Map;
 
 public class Job {
   public static final Job[] ENTRIES = new Job[] {
     new Job("Abjurer", "A defensive mage", 1, 9, new Talent[] {Talent.get("Haze"), Talent.get("Warding Tome")}, makeMap("Mist Shackles", 1, "Barricade", 2, "Stony Shield", 3, "Body of Iron", 1)),
+    new Job("Brute", "A hulking bruiser", 10, 0, new Talent[] {Talent.get("Destruction")}, TabLabTools.<String, Integer>makeMap()),
     new Job("Ninja", "A nimble assassin", 9, 1, new Talent[] {Talent.get("Poison"), Talent.get("Martial Arts")}, makeMap("Vanish", 2, "Smoke Bomb", 1, "Shadow Dagger", 2)),
   };
 
   public static final Map<String, Job> MAPPING = makeMap(
-  "Abjurer", ENTRIES[0], "Ninja", ENTRIES[1]);
+  "Abjurer", ENTRIES[0], "Brute", ENTRIES[1], "Ninja", ENTRIES[2]);
 
   public String name;
 

@@ -20,6 +20,7 @@ out/
 .idea/
 .settings/
 /bin/
+/TabLab/
 
 # Gradle temporary files
 .gradle/

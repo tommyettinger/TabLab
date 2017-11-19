@@ -25,8 +25,11 @@ public class TSVReader {
     }
     public void read(List<String> allLines)
     {
+        String line;
+        if((line = allLines.get(allLines.size() - 1)) == null || line.isEmpty())
+            allLines.remove(allLines.size() - 1);
         //allLines = text.split("\r\n|[\n-\r\u0085\u2028\u2029]");
-        String line = allLines.get(0);
+        line = allLines.get(0);
         int idx = line.lastIndexOf('.');
         packageName = StringKit.safeSubstring(line, 0, idx);
         name = StringKit.safeSubstring(line, idx+1, idx = StringKit.indexOf(line, StringKit.whitespacePattern));

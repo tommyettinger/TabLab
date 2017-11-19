@@ -1,0 +1,8 @@
+com.github.tommyettinger.tablab.generated.Talent	name
+name	description
+Haze	Your presence clouds the minds of nearby enemies, decreasing their Accuracy.
+Warding Tome	Carrying a Spellbook sharply increases your Defense.
+Destruction	Your attacks ignore Defense from shields.
+Poison	When your attacks deal damage, half that damage is dealt again in one round.
+Martial Arts	You are immune to the Inaction and Grappled conditions.
+

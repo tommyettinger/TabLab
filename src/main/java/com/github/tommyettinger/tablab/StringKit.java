@@ -72,11 +72,18 @@ public class StringKit {
     }
 
     public static String join(CharSequence delimiter, CharSequence... elements) {
-        if (elements == null || elements.length == 0) return "";
+        int len;
+        if (elements == null || (len = elements.length) == 0) return "";
         StringBuilder sb = new StringBuilder(64);
-        sb.append(elements[0]);
-        for (int i = 1; i < elements.length; i++) {
-            sb.append(delimiter).append(elements[i]);
+        int attempt = 0;
+        while(attempt < len - 1 && elements[attempt] == null)
+        {
+            attempt++;
+        }
+        sb.append(elements[attempt++]);
+        for (int i = attempt; i < len; i++) {
+            if(elements[i] != null)
+                sb.append(delimiter).append(elements[i]);
         }
         return sb.toString();
     }

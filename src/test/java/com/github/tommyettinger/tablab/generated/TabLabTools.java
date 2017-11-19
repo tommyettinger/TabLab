@@ -33,4 +33,18 @@ public class TabLabTools {
         }
         return lhm;
     }
+    /**
+     * Makes an empty LinkedHashMap; needs key and value types to be specified in order to work. For an empty
+     * LinkedHashMap with String keys and Integer values, you could use {@code TabLabTools.<String, Integer>makeMap();}.
+     * Using the new keyword is probably just as easy in this case; this method is provided for completeness relative to
+     * makeMap() with 2 or more parameters.
+     * @param <K> the type of keys in the returned LinkedHashMap; cannot be inferred and must be specified
+     * @param <V> the type of values in the returned LinkedHashMap; cannot be inferred and must be specified
+     * @return an empty LinkedHashMap with the given key and value types.
+     */
+    public static <K, V> LinkedHashMap<K, V> makeMap()
+    {
+        return new LinkedHashMap<>();
+    }
+
 }

@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
@@ -21,13 +22,24 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class CodeWriter
 {
+    public String toolsPackage = null, toolsClass = null;
     public CodeWriter()
     {
     }
+    public CodeWriter(String toolsPackage, String toolsClass)
+    {
+        if(toolsPackage != null && !toolsPackage.isEmpty() && toolsClass != null && !toolsClass.isEmpty())
+        {
+            this.toolsPackage = toolsPackage;
+            this.toolsClass = toolsClass;
+        }
+    }
+
     private static final Modifier[] mods = {Modifier.PUBLIC};
     private static final TypeName STR = TypeName.get(String.class);
     private static final ClassName VOI = ClassName.get(Void.class);
     public static final HashMap<String, TypeName> typenames = new HashMap<>(32);
+    public static final HashMap<TypeName, String> defaults = new HashMap<>(32);
     static {
         typenames.put("String", STR);
         typenames.put("str", STR);
@@ -48,6 +60,13 @@ public class CodeWriter
         typenames.put("Object", TypeName.OBJECT);
         typenames.put("object", TypeName.OBJECT);
         typenames.put("o", TypeName.OBJECT);
+        defaults.put(STR, "");
+        defaults.put(TypeName.BOOLEAN, "false");
+        defaults.put(TypeName.CHAR, "' '");
+        defaults.put(TypeName.INT, "0");
+        defaults.put(TypeName.LONG, "0L");
+        defaults.put(TypeName.FLOAT, "0.0f");
+        defaults.put(TypeName.DOUBLE, "0.0");
     }
     public String writeToString(TSVReader reader)
     {
@@ -72,11 +91,12 @@ public class CodeWriter
                     outputDirectory = outputDirectory.resolve(packageComponent);
                 }
             }
-
-            try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputDirectory.resolve("TabLabTools.java")), UTF_8)) {
-                writer.write(
-                        new Scanner(CodeWriter.class.getResourceAsStream("/TabLabTools.txt"), "UTF-8").useDelimiter("\\A").next()
-                        .replaceFirst("###~~~###", Matcher.quoteReplacement(reader.packageName)));
+            if(toolsClass == null) {
+                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputDirectory.resolve("TabLabTools.java")), UTF_8)) {
+                    writer.write(
+                            new Scanner(CodeWriter.class.getResourceAsStream("/TabLabTools.txt"), "UTF-8").useDelimiter("\\A").next()
+                                    .replaceFirst("###~~~###", Matcher.quoteReplacement(reader.packageName)));
+                }
             }
 
         } catch (IOException e) {
@@ -89,9 +109,13 @@ public class CodeWriter
         String packageName = reader.packageName;
         if(packageName == null || packageName.isEmpty())
             packageName = reader.packageName = "tab.lab.generated";
-        ClassName tlt = ClassName.get(packageName, "TabLabTools");
+        ClassName tlt;
         TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods);
         MethodSpec.Builder make = MethodSpec.constructorBuilder().addModifiers(mods);
+        if(toolsClass == null)
+            tlt = ClassName.get(packageName, "TabLabTools");
+        else
+            tlt = ClassName.get(toolsPackage, toolsClass);
         String section, field, tmp;
         int fieldCount = reader.headerLine.length;
         TypeName typename, typenameExtra1 = null, typenameExtra2 = null;
@@ -157,7 +181,7 @@ public class CodeWriter
                     if (arraySeparators[j] != null) {
                         if (typenameExtras1[j] != null) {
                             if (!reader.contentLines[i][j].contains(arraySeparators[j]))
-                                cbb.add("new $T<$T, $T>()", LinkedHashMap.class, typenameExtras1[j], typenameExtras2[j]);
+                                cbb.add("$T.<$T, $T>makeMap()", tlt, typenameExtras1[j], typenameExtras2[j]);
                             else
                                 cbb.add("$T.makeMap($L)", tlt,
                                         stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1, crossFields[j], crossExtras[j], 80,
@@ -170,7 +194,7 @@ public class CodeWriter
                     } else if (stringFields[j] || stringExtras[j]) {
                         cbb.add("$S", reader.contentLines[i][j]);
                     } else {
-                        cbb.add("$L", reader.contentLines[i][j]);
+                        cbb.add("$L", reader.contentLines[i][j].isEmpty() ? Objects.toString(defaults.get(typenameFields[j])) : reader.contentLines[i][j]);
                     }
                     if (j < fieldCount - 1)
                         cbb.add(", ");
