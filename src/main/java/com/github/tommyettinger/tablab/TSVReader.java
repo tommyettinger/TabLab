@@ -52,9 +52,18 @@ public class TSVReader {
             temp = allLines.get(i+2);
             idx = -1;
             for (int j = 0; j < headerLine.length - 1; j++) {
-                contentLines[i][j] = StringKit.safeSubstring(temp, idx+1, idx = temp.indexOf('\t', idx+1));
+                if("".equals(headerLine[j]))
+                {
+                    contentLines[i][j] = "";
+                    idx = temp.indexOf('\t', idx+1);
+                }
+                else
+                    contentLines[i][j] = StringKit.safeSubstring(temp, idx+1, idx = temp.indexOf('\t', idx+1));
             }
-            contentLines[i][headerLine.length-1] = temp.substring(idx+1);
+            if("".equals(headerLine[headerLine.length - 1]))
+                contentLines[i][headerLine.length - 1] = "";
+            else
+                contentLines[i][headerLine.length-1] = temp.substring(idx+1);
         }
     }
 

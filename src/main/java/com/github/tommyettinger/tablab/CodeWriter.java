@@ -132,6 +132,13 @@ public class CodeWriter
         ClassName myName = ClassName.get(packageName, reader.name);
         for (int i = 0; i < fieldCount; i++) {
             section = reader.headerLine[i];
+            if("".equals(section))
+            {
+                crossFields[i] = VOI;
+                stringFields[i] = false;
+                typenameFields[i] = VOI;
+                continue;
+            }
             int colon = section.indexOf(':'), arrayStart = section.indexOf('['),
                     mapStart = section.indexOf('{'), mapEnd = section.indexOf('}'),
                     typeLen = Math.max(arrayStart, mapStart);
@@ -178,6 +185,8 @@ public class CodeWriter
                 cbb.add("new $T(", cn);
                 int j = 0;
                 for (; j < fieldCount; j++) {
+                    if(VOI.equals(typenameFields[j]))
+                        continue;
                     if (arraySeparators[j] != null) {
                         if (typenameExtras1[j] != null) {
                             if (!reader.contentLines[i][j].contains(arraySeparators[j]))

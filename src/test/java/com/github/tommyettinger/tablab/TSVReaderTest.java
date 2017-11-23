@@ -51,9 +51,13 @@ public class TSVReaderTest {
     public void testFile()
     {
         TSVReader reader = new TSVReader();
-        reader.readFile("src/test/resources/Weapon.txt");
         CodeWriter writer = new CodeWriter();
+        reader.readFile("src/test/resources/Weapon.txt");
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/java/"));
+        reader.readFile("src/test/resources/MeleeWeapons.txt");
+        System.out.println(writer.write(reader));
+        writer.writeTo(reader, new File("src/test/java/"));
+
     }
 }
