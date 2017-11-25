@@ -203,7 +203,11 @@ public class CodeWriter
                     } else if (stringFields[j] || stringExtras[j]) {
                         cbb.add("$S", reader.contentLines[i][j]);
                     } else {
-                        cbb.add("$L", reader.contentLines[i][j].isEmpty() ? Objects.toString(defaults.get(typenameFields[j])) : reader.contentLines[i][j]);
+                        cbb.add("$L", reader.contentLines[i][j].isEmpty()
+                                ? Objects.toString(defaults.get(typenameFields[j]))
+                                : TypeName.CHAR.equals(typenameFields[j])
+                                ? "'" + reader.contentLines[i][j] + "'"
+                                : reader.contentLines[i][j]);
                     }
                     if (j < fieldCount - 1)
                         cbb.add(", ");
