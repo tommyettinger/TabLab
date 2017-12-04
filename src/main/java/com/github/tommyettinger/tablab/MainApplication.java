@@ -13,14 +13,15 @@ public class MainApplication {
     public static void main(String[] args) {
         if (args == null || args.length < 1)
             return;
-        String tools = null, toolsClass = null;
+        String toolsPackage = null, toolsClass = null, numbersPackage = "java.lang", numbersClass = "Double";
         for (int i = 0; i < args.length; i++) {
             if(args[i].startsWith("--"))
             {
                 if(args[i].equalsIgnoreCase("--SquidLib"))
                 {
-                    tools = "squidpony.squidmath";
+                    numbersPackage = toolsPackage = "squidpony.squidmath";
                     toolsClass = "OrderedMap";
+                    numbersClass = "NumberTools";
                 }
 
                 args[i] = null;
@@ -30,7 +31,7 @@ public class MainApplication {
         try {
             TSVReader reader = new TSVReader();
             reader.read(Files.readAllLines(Paths.get(inputName)));
-            CodeWriter writer = new CodeWriter(tools, toolsClass);
+            CodeWriter writer = new CodeWriter(toolsPackage, toolsClass, numbersPackage, numbersClass);
             System.out.println(writer.write(reader));
             writer.writeTo(reader, new File(""));
         }catch (IOException ignored){}

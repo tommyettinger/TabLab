@@ -2,9 +2,12 @@ package com.github.tommyettinger.tablab.generated;
 
 import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class Weapon {
+public class Weapon implements Serializable {
+  public static final long serialVersionUID = 1L;
+
   public static final Weapon[] ENTRIES = new Weapon[] {
     new Weapon("Axe", 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 5, 2, 2, 0, 0, -1, 0, 0, 0, 0, 5, 0, 0, 0, -1, -1, 4, 0, 0),
     new Weapon("Backpack", 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 3, 0, 0, 1, 0, 0, 5, 0, 4, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 3, 0, 0, -3, -2, 0, 5, 0, 0, 0, 0, 1, 0, 2, 0, 3, 0, 0, 0),
@@ -302,6 +305,9 @@ public class Weapon {
 
   public int bane_tech;
 
+  public Weapon() {
+  }
+
   public Weapon(String name, int mode_ranged, int mode_melee, int mode_thrown, int weight_heavy,
       int weight_light, int uses_armor, int uses_brawn, int uses_caution, int uses_deception,
       int uses_endurance, int uses_finesse, int uses_insight, int uses_knowledge,
@@ -401,6 +407,109 @@ public class Weapon {
     this.bane_wild = bane_wild;
     this.bane_psychic = bane_psychic;
     this.bane_tech = bane_tech;
+  }
+
+  private static long hash64(String data) {
+    if (data == null) return 0;
+    long result = 0x9E3779B97F4A7C94L, a = 0x632BE59BD9B4E019L;
+    final int len = data.length();
+    for (int i = 0; i < len; i++)
+      result += (a ^= 0x8329C6EB9E6AD3E3L * data.charAt(i));
+    return result * (a | 1L) ^ (result >>> 27 | result << 37);
+  }
+
+  private static long hashBasic(Object data) {
+    return (data == null) ? 0 : data.hashCode() * 0x5851F42D4C957F2DL + 0x14057B7EF767814FL;
+  }
+
+  public long hash64() {
+    long result = 0x9E3779B97F4A7C94L, a = 0x632BE59BD9B4E019L, innerR, innerA;
+    int len;
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(name));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * mode_ranged);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * mode_melee);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * mode_thrown);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * weight_heavy);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * weight_light);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_armor);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_brawn);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_caution);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_deception);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_endurance);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_finesse);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_insight);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_knowledge);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_persuasion);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_quickness);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_senses);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * uses_tenacity);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_armor);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_brawn);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_caution);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_deception);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_endurance);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_finesse);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_insight);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_knowledge);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_persuasion);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_quickness);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_senses);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * harms_tenacity);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * grid_range);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * grid_cone);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * grid_grenade);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * grid_sweep);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_block);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_counter);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_disarm);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_trip);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_aim);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_guide);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_pin);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_bounce);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_grab);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_push);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_pull);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_distract);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_bonk);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_threat);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_distant_bonk);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * maneuver_distant_threat);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * limit_battery);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * limit_ammo);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * limit_fuel);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage_slashing);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage_piercing);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage_blunt);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage_flexible);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage_energy);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage_sound);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage_luck);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage_air);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * critical_power);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * critical_frequency);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * critical_combo);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * motion_clumsy);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * motion_quick);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * motion_precise);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bonus_container);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bonus_flammable);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bonus_electronic);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bonus_toxic);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bonus_scary);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bonus_confusing);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bonus_focus);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * social_concealable);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * social_illegal);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * social_obtainable);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bane_wild);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bane_psychic);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * bane_tech);
+    return result * (a | 1L) ^ (result >>> 27 | result << 37);
+  }
+
+  public int hashCode() {
+    return (int)(hash64() & 0xFFFFFFFFL);
   }
 
   public static Weapon get(String item) {

@@ -2,9 +2,12 @@ package com.github.tommyettinger.tablab.generated;
 
 import static com.github.tommyettinger.tablab.generated.TabLabTools.makeMap;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class MeleeWeapons {
+public class MeleeWeapons implements Serializable {
+  public static final long serialVersionUID = 1L;
+
   public static final MeleeWeapons[] ENTRIES = new MeleeWeapons[] {
     new MeleeWeapons("Longsword", "Longswords have good accuracy, damage, and parrying ability, helping their bearer excel in every battle.", '†', "Melee", "Repeat", 1, "Slashing", "Slashing", "Blade", "Blade", "Parry", "Thrust", 3, 5, 1, 1, 5, 3, 0, 0, 1),
     new MeleeWeapons("Katana", "A curved blade attributed mystical power that can make effortless quick slices with impressive accuracy.", '†', "Melee", "Repeat", 1, "Slashing", "Slashing", "Blade", "Dueling", "Sweep", "Blur", 4, 3, 2, 3, 1, 3, 0, 0, 2),
@@ -97,6 +100,9 @@ public class MeleeWeapons {
 
   public int span;
 
+  public MeleeWeapons() {
+  }
+
   public MeleeWeapons(String name, String description, char glyph, String kind, String usage,
       int hands, String type1, String type2, String group1, String group2, String maneuver1,
       String maneuver2, int precision, int damage, int crit, int evasion, int defense, int luck,
@@ -122,6 +128,50 @@ public class MeleeWeapons {
     this.stealth = stealth;
     this.reach = reach;
     this.span = span;
+  }
+
+  private static long hash64(String data) {
+    if (data == null) return 0;
+    long result = 0x9E3779B97F4A7C94L, a = 0x632BE59BD9B4E019L;
+    final int len = data.length();
+    for (int i = 0; i < len; i++)
+      result += (a ^= 0x8329C6EB9E6AD3E3L * data.charAt(i));
+    return result * (a | 1L) ^ (result >>> 27 | result << 37);
+  }
+
+  private static long hashBasic(Object data) {
+    return (data == null) ? 0 : data.hashCode() * 0x5851F42D4C957F2DL + 0x14057B7EF767814FL;
+  }
+
+  public long hash64() {
+    long result = 0x9E3779B97F4A7C94L, a = 0x632BE59BD9B4E019L, innerR, innerA;
+    int len;
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(name));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(description));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * glyph);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(kind));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(usage));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hands);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(type1));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(type2));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(group1));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(group2));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(maneuver1));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(maneuver2));
+    result += (a ^= 0x8329C6EB9E6AD3E3L * precision);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * damage);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * crit);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * evasion);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * defense);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * luck);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * stealth);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * reach);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * span);
+    return result * (a | 1L) ^ (result >>> 27 | result << 37);
+  }
+
+  public int hashCode() {
+    return (int)(hash64() & 0xFFFFFFFFL);
   }
 
   public static MeleeWeapons get(String item) {

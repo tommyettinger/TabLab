@@ -3,10 +3,7 @@ package com.github.tommyettinger.tablab;
 import com.squareup.javapoet.*;
 
 import javax.lang.model.element.Modifier;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -22,16 +19,21 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class CodeWriter
 {
-    public String toolsPackage = null, toolsClass = null;
+    public String toolsPackage = null, toolsClass = null, numbersPackage = "java.lang", numbersClass = "Double";
     public CodeWriter()
     {
     }
-    public CodeWriter(String toolsPackage, String toolsClass)
+    public CodeWriter(String toolsPackage, String toolsClass, String numbersPackage, String numbersClass)
     {
         if(toolsPackage != null && !toolsPackage.isEmpty() && toolsClass != null && !toolsClass.isEmpty())
         {
             this.toolsPackage = toolsPackage;
             this.toolsClass = toolsClass;
+        }
+        if(numbersPackage != null && !numbersPackage.isEmpty() && numbersClass != null && !numbersClass.isEmpty())
+        {
+            this.numbersPackage = numbersPackage;
+            this.numbersClass = numbersClass;
         }
     }
 
@@ -110,7 +112,9 @@ public class CodeWriter
         if(packageName == null || packageName.isEmpty())
             packageName = reader.packageName = "tab.lab.generated";
         ClassName tlt;
-        TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods);
+        TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods).addSuperinterface(Serializable.class);
+        tb.addField(FieldSpec.builder(TypeName.LONG, "serialVersionUID", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer("1L").build());
+        tb.addMethod(MethodSpec.constructorBuilder().addModifiers(mods).build());
         MethodSpec.Builder make = MethodSpec.constructorBuilder().addModifiers(mods);
         if(toolsClass == null)
             tlt = ClassName.get(packageName, "TabLabTools");
@@ -127,6 +131,7 @@ public class CodeWriter
         ClassName[] crossFields = new ClassName[fieldCount];
         ClassName[] crossExtras = new ClassName[fieldCount];
         String[] arraySeparators = new String[fieldCount];
+        String[] fieldNames = new String[fieldCount];
         ParameterizedTypeName mapTypename = null;
         int mapKeyIndex = -1;
         ClassName myName = ClassName.get(packageName, reader.name);
@@ -137,6 +142,7 @@ public class CodeWriter
                 crossFields[i] = VOI;
                 stringFields[i] = false;
                 typenameFields[i] = VOI;
+                fieldNames[i] = "";
                 continue;
             }
             int colon = section.indexOf(':'), arrayStart = section.indexOf('['),
@@ -167,6 +173,7 @@ public class CodeWriter
             typenameFields[i] = typename;
             field = StringKit.safeSubstring(section, 0, colon);
             tb.addField(typename, field, mods);
+            fieldNames[i] = field;
             if(field.equals(reader.keyColumn) && typename.equals(STR)) {
                 if (typeLen < 0) {
                     mapTypename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), STR, myName);
@@ -176,6 +183,7 @@ public class CodeWriter
             make.addParameter(typename, field).addStatement("this.$N = $N", field, field);
         }
         tb.addMethod(make.build());
+        makeHashCode(tb, fieldNames, typenameFields);
         ClassName cn = ClassName.get(packageName, reader.name);
         if(reader.contentLines.length > 0) {
             ArrayTypeName atn = ArrayTypeName.of(cn);
@@ -234,6 +242,83 @@ public class CodeWriter
         }
         TypeSpec t = tb.build();
         return JavaFile.builder(packageName, t).addStaticImport(tlt, "makeMap").skipJavaLangImports(true).build();
+    }
+
+    private void makeHashCode(TypeSpec.Builder tb, String[] fieldNames, TypeName[] fieldTypes)
+    {
+        tb.addMethod(MethodSpec.methodBuilder("hash64").addModifiers(Modifier.PRIVATE, Modifier.STATIC).returns(TypeName.LONG).addParameter(STR, "data")
+                .addCode("if (data == null) return 0;\n" +
+                        "long result = 0x9E3779B97F4A7C94L, a = 0x632BE59BD9B4E019L;\n" +
+                        "final int len = data.length();\n" +
+                        "for (int i = 0; i < len; i++)\n" +
+                        "  result += (a ^= 0x8329C6EB9E6AD3E3L * data.charAt(i));\n" +
+                        "return result * (a | 1L) ^ (result >>> 27 | result << 37);\n").build());
+        tb.addMethod(MethodSpec.methodBuilder("hashBasic").addModifiers(Modifier.PRIVATE, Modifier.STATIC).returns(TypeName.LONG).addParameter(TypeName.OBJECT, "data")
+                .addCode("return (data == null) ? 0 : data.hashCode() * 0x5851F42D4C957F2DL + 0x14057B7EF767814FL;\n").build());
+
+        MethodSpec.Builder mb = MethodSpec.methodBuilder("hash64").addModifiers(Modifier.PUBLIC).returns(TypeName.LONG);
+        mb.addCode("long result = 0x9E3779B97F4A7C94L, a = 0x632BE59BD9B4E019L, innerR, innerA;\nint len;\n");
+        int len = Math.min(fieldNames.length, fieldTypes.length);
+        TypeName tn;
+        String fn;
+        TypeName nt = ClassName.get(numbersPackage, numbersClass);
+        for (int i = 0; i < len; i++) {
+            fn = fieldNames[i];
+            tn = fieldTypes[i];
+            if(fn == null || fn.isEmpty()) continue;
+            if(tn.isPrimitive())
+            {
+                if(tn.equals(TypeName.DOUBLE) || tn.equals(TypeName.FLOAT))
+                {
+                    mb.addStatement("result += (a ^= 0x8329C6EB9E6AD3E3L * $T.doubleToLongBits($N))", nt, fn);
+                }
+                else if(tn.equals(TypeName.BOOLEAN))
+                {
+                    mb.addStatement("result += (a ^= 0x8329C6EB9E6AD3E3L * ($N ? 0xC6BC279692B5CC83L : 0xAEF17502108EF2D9L))", fn);
+                }
+                else
+                {
+                    mb.addStatement("result += (a ^= 0x8329C6EB9E6AD3E3L * $N)", fn);
+                }
+            }
+            else if(tn.equals(STR))
+            {
+                mb.addStatement("result += (a ^= 0x8329C6EB9E6AD3E3L * hash64($N))", fn);
+            }
+            else if(tn instanceof ArrayTypeName)
+            {
+                tn = ((ArrayTypeName)tn).componentType;
+                mb.addStatement("innerR = 0x9E3779B97F4A7C94L");
+                mb.addStatement("innerA = 0x632BE59BD9B4E019L");
+                mb.addStatement("len = ($N == null ? 0 : $N.length)", fn, fn);
+                if(tn.isPrimitive()) {
+                    if (tn.equals(TypeName.DOUBLE) || tn.equals(TypeName.FLOAT)) {
+                        mb.addCode("for (int i = 0; i < len; i++) innerR += (innerA ^= 0x8329C6EB9E6AD3E3L * $T.doubleToLongBits($N[i]));\n", nt, fn);
+                    } else if (tn.equals(TypeName.BOOLEAN)) {
+                        mb.addCode("for (int i = 0; i < len; i++) innerR += (innerA ^= 0x8329C6EB9E6AD3E3L * ($N[i] ? 0xC6BC279692B5CC83L : 0xAEF17502108EF2D9L));\n", fn);
+                    } else {
+                        mb.addCode("for (int i = 0; i < len; i++) innerR += (innerA ^= 0x8329C6EB9E6AD3E3L * $N[i]);\n", fn);
+                    }
+                }
+                else if(tn.equals(STR))
+                {
+                    mb.addCode("for (int i = 0; i < len; i++) innerR += (innerA ^= 0x8329C6EB9E6AD3E3L * hash64($N[i]));\n", fn);
+                }
+                else
+                {
+                    mb.addCode("for (int i = 0; i < len; i++) innerR += (innerA ^= 0x8329C6EB9E6AD3E3L * hashBasic($N[i]));\n", fn);
+                }
+                mb.addStatement("a += innerA");
+                mb.addStatement("result ^= innerR * (innerA | 1L) ^ (innerR >>> 27 | innerR << 37)");
+            }
+            else
+            {
+                mb.addStatement("result += (a ^= 0x8329C6EB9E6AD3E3L * hashBasic($N))", fn);
+            }
+        }
+        mb.addStatement("return result * (a | 1L) ^ (result >>> 27 | result << 37)");
+        tb.addMethod(mb.build());
+        tb.addMethod(MethodSpec.methodBuilder("hashCode").addModifiers(mods).returns(TypeName.INT).addStatement("return (int)(hash64() & 0xFFFFFFFFL)").build());
     }
 
     private static String characterLiteral(char c) {
