@@ -452,7 +452,11 @@ public class CodeWriter
         String value;
         for (int s = 0; s < values.length;) {
             value = values[s];
-            if((cross2 == null || (s & 1) == 0) && !VOI.equals(cross1)){
+            if(value == null || value.isEmpty()) {
+                ++s;
+                continue;
+            }
+            if((cross2 == null || (s & 1) == 0) && !VOI.equals(cross1)) {
                 work.setLength(0);
                 work.append(cross1.simpleName()).append(".get(\"").append(value).append("\")");
                 if (++s < values.length) {
@@ -484,7 +488,6 @@ public class CodeWriter
                     result.append(work);
                 }
             }
-
             else if(alternationCode >= 2 || (s & 1) == alternationCode) {
                 work.setLength(0);
                 work.append('"');
