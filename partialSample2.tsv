@@ -1,4 +1,4 @@
 name	description	offense:int	defense:int	talents:Talent[;;]	skills:str{,}int
 Abjurer	A defensive mage	1	9	Haze;;Warding Tome	Mist Shackles,1,Barricade,2,Stony Shield,3,Body of Iron,1
-Brute	A hulking bruiser	10		Destruction
+Brute	A hulking bruiser	10		Destruction	
 Ninja	A nimble assassin	9	1	Poison;;Martial Arts	Vanish,2,Smoke Bomb,1,Shadow Dagger,2
