@@ -1,4 +1,3 @@
-com.github.tommyettinger.tablab.generated.MeleeWeapons	name
 name	description	glyph:c	kind	usage	hands:i	type1	type2	group1	group2	maneuver1	maneuver2	precision:i	damage:i	crit:i	evasion:i	defense:i	luck:i	stealth:i	reach:i	span:i
 Longsword	Longswords have good accuracy, damage, and parrying ability, helping their bearer excel in every battle.	†	Melee	Repeat	1	Slashing	Slashing	Blade	Blade	Parry	Thrust	3	5	1	1	5	3	0	0	1
 Katana	A curved blade attributed mystical power that can make effortless quick slices with impressive accuracy.	†	Melee	Repeat	1	Slashing	Slashing	Blade	Dueling	Sweep	Blur	4	3	2	3	1	3	0	0	2

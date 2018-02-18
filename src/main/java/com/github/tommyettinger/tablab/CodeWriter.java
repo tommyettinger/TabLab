@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Scanner;
-import java.util.regex.Matcher;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -86,20 +85,23 @@ public class CodeWriter
 
     public void writeTo(TSVReader reader, File file) {
         try {
-            Path p = file.toPath(), outputDirectory = p;
-            write(reader).writeTo(p);
-            if (!reader.packageName.isEmpty()) {
-                for (String packageComponent : StringKit.split(reader.packageName, ".")) {
-                    outputDirectory = outputDirectory.resolve(packageComponent);
-                }
-            }
+            Path p = file.toPath();//, outputDirectory = p;
+            JavaFile jf = write(reader);
+            jf.writeTo(p);
+//            if (!reader.packageName.isEmpty()) {
+//                for (String packageComponent : StringKit.split(reader.packageName, ".")) {
+//                    outputDirectory = outputDirectory.resolve(packageComponent);
+//                }
+//            }
             if(toolsClass == null) {
-                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputDirectory.resolve("TabLabTools.java")), UTF_8)) {
+                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(
+                        Files.createDirectories(p.resolve(jf.packageName.replace('.', '/'))).resolve("TabLabTools.java")), UTF_8)) {
                     writer.write(
                             new Scanner(CodeWriter.class.getResourceAsStream("/TabLabTools.txt"), "UTF-8").useDelimiter("\\A").next()
-                                    .replaceFirst("###~~~###", Matcher.quoteReplacement(reader.packageName)));
+                    );
                 }
             }
+//                                    .replaceFirst("###~~~###", Matcher.quoteReplacement(reader.packageName))
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -108,9 +110,7 @@ public class CodeWriter
 
     public JavaFile write(TSVReader reader)
     {
-        String packageName = reader.packageName;
-        if(packageName == null || packageName.isEmpty())
-            packageName = reader.packageName = "tab.lab.generated";
+        String packageName = "generated";
         ClassName tlt;
         TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods).addSuperinterface(Serializable.class);
         tb.addField(FieldSpec.builder(TypeName.LONG, "serialVersionUID", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer("1L").build());
@@ -145,13 +145,26 @@ public class CodeWriter
                 fieldNames[i] = "";
                 continue;
             }
-            int colon = section.indexOf(':'), arrayStart = section.indexOf('['),
+            int caret = section.indexOf('^'), colon = section.indexOf(':'), arrayStart = section.indexOf('['),
                     mapStart = section.indexOf('{'), mapEnd = section.indexOf('}'),
                     typeLen = Math.max(arrayStart, mapStart);
             if(typeLen < 0) {
-                crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
-                typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
-                stringFields[i] = typename.equals(STR);
+                if (caret >= 0) {
+                    reader.headerLine[i] = section = StringKit.safeSubstring(section, 0, caret);
+                    reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
+                    crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
+                    typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
+                    stringFields[i] = typename.equals(STR);
+                } else if (reader.keyColumn == null) {
+                    reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
+                    crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
+                    typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
+                    stringFields[i] = typename.equals(STR);
+                } else {
+                    crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
+                    typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
+                    stringFields[i] = typename.equals(STR);
+                }
             }
             else if(arrayStart >= 0) {
                 crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, arrayStart)) ? VOI : ClassName.get(packageName, tmp);

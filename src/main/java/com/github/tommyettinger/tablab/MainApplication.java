@@ -3,6 +3,7 @@ package com.github.tommyettinger.tablab;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -30,7 +31,8 @@ public class MainApplication {
         String inputName = StringKit.join(" ", args);
         try {
             TSVReader reader = new TSVReader();
-            reader.read(Files.readAllLines(Paths.get(inputName)));
+            Path path = Paths.get(inputName);
+            reader.read(path.getFileName().toString(), Files.readAllLines(path));
             CodeWriter writer = new CodeWriter(toolsPackage, toolsClass, numbersPackage, numbersClass);
             System.out.println(writer.write(reader));
             writer.writeTo(reader, new File(""));

@@ -4,6 +4,7 @@ import regexodus.Pattern;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -13,43 +14,51 @@ import java.util.List;
 public class TSVReader {
     public String[] headerLine;
     public String[][] contentLines;
-    public String packageName;
     public String name;
     public String keyColumn;
     public TSVReader()
     {
     }
-    public void read(String text)
+    public void read(String filename, String text)
     {
-        read(Pattern.compile("\\V+").matcher(text).foundStrings());
+        read(filename, Pattern.compile("\\V+").matcher(text).foundStrings());
     }
-    public void read(List<String> allLines)
+    public void read(String filename, List<String> allLines)
     {
+        //allLines = text.split("\r\n|[\n-\r\u0085\u2028\u2029]");
+
         String line;
         if((line = allLines.get(allLines.size() - 1)) == null || line.isEmpty())
             allLines.remove(allLines.size() - 1);
-        //allLines = text.split("\r\n|[\n-\r\u0085\u2028\u2029]");
-        line = allLines.get(0);
-        int idx = line.lastIndexOf('.');
-        packageName = StringKit.safeSubstring(line, 0, idx);
-        name = StringKit.safeSubstring(line, idx+1, idx = StringKit.indexOf(line, StringKit.whitespacePattern));
-        if(idx < 0)
-            keyColumn = "void";
+        int idx;
+        keyColumn = null;
+//        line = allLines.get(0);
+//        int idx = line.lastIndexOf('.');
+//        packageName = StringKit.safeSubstring(line, 0, idx);
+//        name = StringKit.safeSubstring(line, idx+1, idx = StringKit.indexOf(line, StringKit.whitespacePattern));
+//        if(idx < 0)
+//            keyColumn = "void";
+//        else
+//        {
+//            keyColumn = StringKit.safeSubstring(line,
+//                    idx = StringKit.indexOf(line, StringKit.nonSpacePattern, idx),
+//                    StringKit.indexOf(line, StringKit.whitespacePattern, idx));
+//            if("void".equalsIgnoreCase(keyColumn))
+//                keyColumn = "";
+//        }
+        if(filename == null)
+            name = "Untitled";
+        else if((idx = filename.indexOf('.')) >= 0)
+            name = StringKit.safeSubstring(filename, 0, idx);
         else
-        {
-            keyColumn = StringKit.safeSubstring(line,
-                    idx = StringKit.indexOf(line, StringKit.nonSpacePattern, idx),
-                    StringKit.indexOf(line, StringKit.whitespacePattern, idx));
-            if("void".equalsIgnoreCase(keyColumn))
-                keyColumn = "";
-        }
-        headerLine = StringKit.split(allLines.get(1), "\t");
+            name = filename;
+        headerLine = StringKit.split(allLines.get(0), "\t");
         //if("void".equals(keyColumn))
         //    keyColumn = headerLine[0];
-        contentLines = new String[allLines.size() - 2][headerLine.length];
+        contentLines = new String[allLines.size() - 1][headerLine.length];
         String temp;
         for (int i = 0; i < contentLines.length; i++) {
-            temp = allLines.get(i+2);
+            temp = allLines.get(i+1);
             idx = -1;
             for (int j = 0; j < headerLine.length - 1; j++) {
                 if("".equals(headerLine[j]))
@@ -58,19 +67,32 @@ public class TSVReader {
                     idx = temp.indexOf('\t', idx+1);
                 }
                 else
+                {
                     contentLines[i][j] = StringKit.safeSubstring(temp, idx+1, idx = temp.indexOf('\t', idx+1));
+//                    if(temp.charAt(idx - 1) == '^')
+//                        keyColumn = (contentLines[i][j] = StringKit.safeSubstring(contentLines[i][j], 0, contentLines[i][j].length() - 1));
+//                    else if(keyColumn == null)
+//                        keyColumn = contentLines[i][j];
+                }
             }
             if("".equals(headerLine[headerLine.length - 1]))
                 contentLines[i][headerLine.length - 1] = "";
             else
+            {
                 contentLines[i][headerLine.length-1] = temp.substring(idx+1);
+//                if(temp.charAt(idx - 1) == '^')
+//                    keyColumn = (contentLines[i][headerLine.length-1] = StringKit.safeSubstring(contentLines[i][headerLine.length-1], 0, contentLines[i][headerLine.length-1].length() - 1));
+//                else if(keyColumn == null)
+//                    keyColumn = contentLines[i][headerLine.length-1];
+            }
         }
     }
 
     public void readFile(String filename)
     {
         try {
-            read(Files.readAllLines(Paths.get(filename)));
+            Path path = Paths.get(filename);
+            read(path.getFileName().toString(), Files.readAllLines(path));
         } catch (IOException e) {
             System.err.println("Could not read file (check that path is correct): " + filename);
         }
