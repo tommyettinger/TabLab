@@ -57,6 +57,25 @@ public class Talent implements Serializable {
     return (int)(hash64() & 0xFFFFFFFFL);
   }
 
+  private static boolean stringArrayEquals(String[] left, String[] right) {
+    if (left == right) return true;
+    if (left == null || right == null) return false;
+    final int len = left.length;
+    if(len != right.length) return false;
+    String l, r;
+    for (int i = 0; i < len; i++) { if(((l = left[i]) != (r = right[i])) && (((l == null) != (r == null)) || !l.equals(r))) { return false; } }
+    return true;
+  }
+
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Talent other = (Talent) o;
+    if (name != null ? !name.equals(other.name) : other.name != null) return false;
+    if (description != null ? !description.equals(other.description) : other.description != null) return false;
+    return true;
+  }
+
   public static Talent get(String item) {
     return MAPPING.get(item);
   }

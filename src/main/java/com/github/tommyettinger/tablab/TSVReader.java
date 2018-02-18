@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -96,5 +97,28 @@ public class TSVReader {
         } catch (IOException e) {
             System.err.println("Could not read file (check that path is correct): " + filename);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TSVReader tsvReader = (TSVReader) o;
+
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(headerLine, tsvReader.headerLine)) return false;
+        if (!Arrays.deepEquals(contentLines, tsvReader.contentLines)) return false;
+        if (name != null ? !name.equals(tsvReader.name) : tsvReader.name != null) return false;
+        return keyColumn != null ? keyColumn.equals(tsvReader.keyColumn) : tsvReader.keyColumn == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(headerLine);
+        result = 31 * result + Arrays.deepHashCode(contentLines);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (keyColumn != null ? keyColumn.hashCode() : 0);
+        return result;
     }
 }

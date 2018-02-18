@@ -3,6 +3,7 @@ package generated;
 import static generated.TabLabTools.makeMap;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
 
 public class Job implements Serializable {
@@ -74,6 +75,29 @@ public class Job implements Serializable {
 
   public int hashCode() {
     return (int)(hash64() & 0xFFFFFFFFL);
+  }
+
+  private static boolean stringArrayEquals(String[] left, String[] right) {
+    if (left == right) return true;
+    if (left == null || right == null) return false;
+    final int len = left.length;
+    if(len != right.length) return false;
+    String l, r;
+    for (int i = 0; i < len; i++) { if(((l = left[i]) != (r = right[i])) && (((l == null) != (r == null)) || !l.equals(r))) { return false; } }
+    return true;
+  }
+
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Job other = (Job) o;
+    if (name != null ? !name.equals(other.name) : other.name != null) return false;
+    if (description != null ? !description.equals(other.description) : other.description != null) return false;
+    if (offense != other.offense) return false;
+    if (defense != other.defense) return false;
+    if(!Arrays.deepEquals(talents, other.talents)) return false;
+    if (skills != null ? !skills.equals(other.skills) : other.skills != null) return false;
+    return true;
   }
 
   public static Job get(String item) {

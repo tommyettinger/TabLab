@@ -6,10 +6,7 @@ import javax.lang.model.element.Modifier;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -151,15 +148,15 @@ public class CodeWriter
             if(typeLen < 0) {
                 if (caret >= 0) {
                     reader.headerLine[i] = section = StringKit.safeSubstring(section, 0, caret);
-                    reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
                     crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
                     typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
-                    stringFields[i] = typename.equals(STR);
+                    if(stringFields[i] = typename.equals(STR))
+                        reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
                 } else if (reader.keyColumn == null) {
-                    reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
                     crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
                     typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
-                    stringFields[i] = typename.equals(STR);
+                    if(stringFields[i] = typename.equals(STR))
+                        reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
                 } else {
                     crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
                     typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
@@ -196,8 +193,9 @@ public class CodeWriter
             make.addParameter(typename, field).addStatement("this.$N = $N", field, field);
         }
         tb.addMethod(make.build());
-        makeHashCode(tb, fieldNames, typenameFields);
         ClassName cn = ClassName.get(packageName, reader.name);
+        makeHashCode(tb, fieldNames, typenameFields);
+        makeEquals(tb, cn, fieldNames, typenameFields);
         if(reader.contentLines.length > 0) {
             ArrayTypeName atn = ArrayTypeName.of(cn);
             CodeBlock.Builder cbb = CodeBlock.builder();
@@ -332,6 +330,57 @@ public class CodeWriter
         mb.addStatement("return result * (a | 1L) ^ (result >>> 27 | result << 37)");
         tb.addMethod(mb.build());
         tb.addMethod(MethodSpec.methodBuilder("hashCode").addModifiers(mods).returns(TypeName.INT).addStatement("return (int)(hash64() & 0xFFFFFFFFL)").build());
+    }
+    private void makeEquals(TypeSpec.Builder tb, ClassName cn, String[] fieldNames, TypeName[] fieldTypes)
+    {
+        tb.addMethod(MethodSpec.methodBuilder("stringArrayEquals").addModifiers(Modifier.PRIVATE, Modifier.STATIC).returns(TypeName.BOOLEAN).addParameter(ArrayTypeName.of(STR), "left").addParameter(ArrayTypeName.of(STR), "right")
+                .addCode("if (left == right) return true;\n" +
+                        "if (left == null || right == null) return false;\n" +
+                        "final int len = left.length;\n" +
+                        "if(len != right.length) return false;\n" +
+                        "String l, r;\n" +
+                        "for (int i = 0; i < len; i++) { if(((l = left[i]) != (r = right[i])) && (((l == null) != (r == null)) || !l.equals(r))) { return false; } }\n" +
+                        "return true;\n").build());
+
+        MethodSpec.Builder mb = MethodSpec.methodBuilder("equals").addModifiers(Modifier.PUBLIC).returns(TypeName.BOOLEAN).addParameter(TypeName.OBJECT, "o");
+        mb.addCode("if (this == o) return true;\nif (o == null || getClass() != o.getClass()) return false;\n$T other = ($T) o;\n", cn, cn);
+        int len = Math.min(fieldNames.length, fieldTypes.length);
+        TypeName tn, arrays = TypeName.get(Arrays.class);
+        String fn;
+        for (int i = 0; i < len; i++) {
+            fn = fieldNames[i];
+            tn = fieldTypes[i];
+            if(fn == null || fn.isEmpty()) continue;
+            if(tn.isPrimitive())
+            {
+                mb.addStatement("if ($N != other.$N) return false", fn, fn);
+            }
+//            else if(tn.equals(STR))
+//            {
+//                mb.addStatement("if ($N != null ? !$N.equals(other.$N) : other.$N != null) return false", fn, fn, fn, fn);
+//            }
+            else if(tn instanceof ArrayTypeName)
+            {
+                tn = ((ArrayTypeName)tn).componentType;
+                if(tn.isPrimitive()) {
+                    mb.addStatement("if(!$T.equals($N, other.$N)) return false", arrays, fn, fn);
+                }
+                else if(tn.equals(STR))
+                {
+                    mb.addStatement("if(!stringArrayEquals($N, other.$N)) return false", fn, fn);
+                }
+                else
+                {
+                    mb.addStatement("if(!$T.deepEquals($N, other.$N)) return false", arrays, fn, fn);
+                }
+            }
+            else
+            {
+                mb.addStatement("if ($N != null ? !$N.equals(other.$N) : other.$N != null) return false", fn, fn, fn, fn);
+            }
+        }
+        mb.addStatement("return true");
+        tb.addMethod(mb.build());
     }
 
     private static String characterLiteral(char c) {

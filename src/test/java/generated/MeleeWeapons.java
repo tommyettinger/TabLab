@@ -174,6 +174,44 @@ public class MeleeWeapons implements Serializable {
     return (int)(hash64() & 0xFFFFFFFFL);
   }
 
+  private static boolean stringArrayEquals(String[] left, String[] right) {
+    if (left == right) return true;
+    if (left == null || right == null) return false;
+    final int len = left.length;
+    if(len != right.length) return false;
+    String l, r;
+    for (int i = 0; i < len; i++) { if(((l = left[i]) != (r = right[i])) && (((l == null) != (r == null)) || !l.equals(r))) { return false; } }
+    return true;
+  }
+
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    MeleeWeapons other = (MeleeWeapons) o;
+    if (name != null ? !name.equals(other.name) : other.name != null) return false;
+    if (description != null ? !description.equals(other.description) : other.description != null) return false;
+    if (glyph != other.glyph) return false;
+    if (kind != null ? !kind.equals(other.kind) : other.kind != null) return false;
+    if (usage != null ? !usage.equals(other.usage) : other.usage != null) return false;
+    if (hands != other.hands) return false;
+    if (type1 != null ? !type1.equals(other.type1) : other.type1 != null) return false;
+    if (type2 != null ? !type2.equals(other.type2) : other.type2 != null) return false;
+    if (group1 != null ? !group1.equals(other.group1) : other.group1 != null) return false;
+    if (group2 != null ? !group2.equals(other.group2) : other.group2 != null) return false;
+    if (maneuver1 != null ? !maneuver1.equals(other.maneuver1) : other.maneuver1 != null) return false;
+    if (maneuver2 != null ? !maneuver2.equals(other.maneuver2) : other.maneuver2 != null) return false;
+    if (precision != other.precision) return false;
+    if (damage != other.damage) return false;
+    if (crit != other.crit) return false;
+    if (evasion != other.evasion) return false;
+    if (defense != other.defense) return false;
+    if (luck != other.luck) return false;
+    if (stealth != other.stealth) return false;
+    if (reach != other.reach) return false;
+    if (span != other.span) return false;
+    return true;
+  }
+
   public static MeleeWeapons get(String item) {
     return MAPPING.get(item);
   }

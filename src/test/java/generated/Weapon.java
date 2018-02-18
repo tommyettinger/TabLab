@@ -512,6 +512,103 @@ public class Weapon implements Serializable {
     return (int)(hash64() & 0xFFFFFFFFL);
   }
 
+  private static boolean stringArrayEquals(String[] left, String[] right) {
+    if (left == right) return true;
+    if (left == null || right == null) return false;
+    final int len = left.length;
+    if(len != right.length) return false;
+    String l, r;
+    for (int i = 0; i < len; i++) { if(((l = left[i]) != (r = right[i])) && (((l == null) != (r == null)) || !l.equals(r))) { return false; } }
+    return true;
+  }
+
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Weapon other = (Weapon) o;
+    if (name != null ? !name.equals(other.name) : other.name != null) return false;
+    if (mode_ranged != other.mode_ranged) return false;
+    if (mode_melee != other.mode_melee) return false;
+    if (mode_thrown != other.mode_thrown) return false;
+    if (weight_heavy != other.weight_heavy) return false;
+    if (weight_light != other.weight_light) return false;
+    if (uses_armor != other.uses_armor) return false;
+    if (uses_brawn != other.uses_brawn) return false;
+    if (uses_caution != other.uses_caution) return false;
+    if (uses_deception != other.uses_deception) return false;
+    if (uses_endurance != other.uses_endurance) return false;
+    if (uses_finesse != other.uses_finesse) return false;
+    if (uses_insight != other.uses_insight) return false;
+    if (uses_knowledge != other.uses_knowledge) return false;
+    if (uses_persuasion != other.uses_persuasion) return false;
+    if (uses_quickness != other.uses_quickness) return false;
+    if (uses_senses != other.uses_senses) return false;
+    if (uses_tenacity != other.uses_tenacity) return false;
+    if (harms_armor != other.harms_armor) return false;
+    if (harms_brawn != other.harms_brawn) return false;
+    if (harms_caution != other.harms_caution) return false;
+    if (harms_deception != other.harms_deception) return false;
+    if (harms_endurance != other.harms_endurance) return false;
+    if (harms_finesse != other.harms_finesse) return false;
+    if (harms_insight != other.harms_insight) return false;
+    if (harms_knowledge != other.harms_knowledge) return false;
+    if (harms_persuasion != other.harms_persuasion) return false;
+    if (harms_quickness != other.harms_quickness) return false;
+    if (harms_senses != other.harms_senses) return false;
+    if (harms_tenacity != other.harms_tenacity) return false;
+    if (grid_range != other.grid_range) return false;
+    if (grid_cone != other.grid_cone) return false;
+    if (grid_grenade != other.grid_grenade) return false;
+    if (grid_sweep != other.grid_sweep) return false;
+    if (maneuver_block != other.maneuver_block) return false;
+    if (maneuver_counter != other.maneuver_counter) return false;
+    if (maneuver_disarm != other.maneuver_disarm) return false;
+    if (maneuver_trip != other.maneuver_trip) return false;
+    if (maneuver_aim != other.maneuver_aim) return false;
+    if (maneuver_guide != other.maneuver_guide) return false;
+    if (maneuver_pin != other.maneuver_pin) return false;
+    if (maneuver_bounce != other.maneuver_bounce) return false;
+    if (maneuver_grab != other.maneuver_grab) return false;
+    if (maneuver_push != other.maneuver_push) return false;
+    if (maneuver_pull != other.maneuver_pull) return false;
+    if (maneuver_distract != other.maneuver_distract) return false;
+    if (maneuver_bonk != other.maneuver_bonk) return false;
+    if (maneuver_threat != other.maneuver_threat) return false;
+    if (maneuver_distant_bonk != other.maneuver_distant_bonk) return false;
+    if (maneuver_distant_threat != other.maneuver_distant_threat) return false;
+    if (limit_battery != other.limit_battery) return false;
+    if (limit_ammo != other.limit_ammo) return false;
+    if (limit_fuel != other.limit_fuel) return false;
+    if (damage_slashing != other.damage_slashing) return false;
+    if (damage_piercing != other.damage_piercing) return false;
+    if (damage_blunt != other.damage_blunt) return false;
+    if (damage_flexible != other.damage_flexible) return false;
+    if (damage_energy != other.damage_energy) return false;
+    if (damage_sound != other.damage_sound) return false;
+    if (damage_luck != other.damage_luck) return false;
+    if (damage_air != other.damage_air) return false;
+    if (critical_power != other.critical_power) return false;
+    if (critical_frequency != other.critical_frequency) return false;
+    if (critical_combo != other.critical_combo) return false;
+    if (motion_clumsy != other.motion_clumsy) return false;
+    if (motion_quick != other.motion_quick) return false;
+    if (motion_precise != other.motion_precise) return false;
+    if (bonus_container != other.bonus_container) return false;
+    if (bonus_flammable != other.bonus_flammable) return false;
+    if (bonus_electronic != other.bonus_electronic) return false;
+    if (bonus_toxic != other.bonus_toxic) return false;
+    if (bonus_scary != other.bonus_scary) return false;
+    if (bonus_confusing != other.bonus_confusing) return false;
+    if (bonus_focus != other.bonus_focus) return false;
+    if (social_concealable != other.social_concealable) return false;
+    if (social_illegal != other.social_illegal) return false;
+    if (social_obtainable != other.social_obtainable) return false;
+    if (bane_wild != other.bane_wild) return false;
+    if (bane_psychic != other.bane_psychic) return false;
+    if (bane_tech != other.bane_tech) return false;
+    return true;
+  }
+
   public static Weapon get(String item) {
     return MAPPING.get(item);
   }
