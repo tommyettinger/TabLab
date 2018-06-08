@@ -42,6 +42,7 @@ public class CodeWriter
         typenames.put("String", STR);
         typenames.put("str", STR);
         typenames.put("s", STR);
+        typenames.put("", STR);
         typenames.put("bool", TypeName.BOOLEAN);
         typenames.put("boolean", TypeName.BOOLEAN);
         typenames.put("b", TypeName.BOOLEAN);
@@ -148,19 +149,25 @@ public class CodeWriter
             if(typeLen < 0) {
                 if (caret >= 0) {
                     reader.headerLine[i] = section = StringKit.safeSubstring(section, 0, caret);
-                    crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
-                    typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
-                    if(stringFields[i] = typename.equals(STR))
-                        reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
-                } else if (reader.keyColumn == null) {
-                    crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
+                    crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1)) ? VOI : ClassName.get(packageName, tmp);
                     typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
                     if(stringFields[i] = typename.equals(STR))
                         reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
                 } else {
-                    crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
-                    typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
-                    stringFields[i] = typename.equals(STR);
+                    if (colon < 0)
+                    {
+                        crossFields[i] = VOI;
+                        typename = STR;
+                        stringFields[i] = true;
+                        if(reader.keyColumn == null)
+                            reader.keyColumn = section;
+                    }
+                    else {
+                        crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1)) ? VOI : ClassName.get(packageName, tmp);
+                        typename = typenames.getOrDefault(tmp, crossFields[i]);
+                        if(stringFields[i] = typename.equals(STR))
+                            reader.keyColumn = section.substring(0, colon);
+                    }
                 }
             }
             else if(arrayStart >= 0) {
@@ -173,7 +180,7 @@ public class CodeWriter
             else { // map case
                 crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, mapStart)) ? VOI : ClassName.get(packageName, tmp);
                 typenameExtras1[i] = typenameExtra1 = typenames.getOrDefault(tmp, crossFields[i]).box();
-                crossExtras[i] = typenames.containsKey(tmp = section.substring(mapEnd + 1, section.length())) ? VOI : ClassName.get(packageName, tmp);
+                crossExtras[i] = typenames.containsKey(tmp = section.substring(mapEnd + 1)) ? VOI : ClassName.get(packageName, tmp);
                 typenameExtras2[i] = typenameExtra2 = typenames.getOrDefault(tmp, crossExtras[i]).box();
                 stringFields[i] = typenameExtra1.equals(STR);
                 stringExtras[i] = typenameExtra2.equals(STR);
@@ -219,8 +226,8 @@ public class CodeWriter
                                     stringLiterals((stringFields[j] ? 2 : -1), crossFields[j], null,
                                             80, StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
                         }
-                    } else if (stringFields[j] || stringExtras[j]) {
-                        cbb.add("$S", reader.contentLines[i][j]);
+                    } else if (stringFields[j] || stringExtras[j] || !VOI.equals(crossFields[j])) {
+                        cbb.add("$L", stringLiteral(reader.contentLines[i][j], crossFields[j]));
                     } else {
                         cbb.add("$L", reader.contentLines[i][j].isEmpty()
                                 ? Objects.toString(defaults.get(typenameFields[j]))
@@ -405,25 +412,30 @@ public class CodeWriter
      * @param value the value to escape as a String
      * @return the string literal representing {@code value}, including wrapping double quotes.
      */
-    private static String stringLiteral(String value) {
+    private static String stringLiteral(String value, ClassName cross1) {
         StringBuilder result = new StringBuilder(value.length() + 2);
-        result.append('"');
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            // trivial case: single quote must not be escaped
-            if (c == '\'') {
-                result.append("'");
-                continue;
-            }
-            // trivial case: double quotes must be escaped
-            if (c == '\"') {
-                result.append("\\\"");
-                continue;
-            }
-            // default case: just let character literal do its work
-            result.append(characterLiteral(c));
+        if(!VOI.equals(cross1) && !STR.equals(cross1)) {
+            result.append(cross1.simpleName()).append(".get(\"").append(value).append("\")");
         }
-        result.append('"');
+        else {
+            result.append('"');
+            for (int i = 0; i < value.length(); i++) {
+                char c = value.charAt(i);
+                // trivial case: single quote must not be escaped
+                if (c == '\'') {
+                    result.append("'");
+                    continue;
+                }
+                // trivial case: double quotes must be escaped
+                if (c == '\"') {
+                    result.append("\\\"");
+                    continue;
+                }
+                // default case: just let character literal do its work
+                result.append(characterLiteral(c));
+            }
+            result.append('"');
+        }
         return result.toString();
     }
     /**

@@ -16,10 +16,10 @@ public class TSVReaderTest {
             "Poison\tWhen your attacks deal damage, half that damage is dealt again in one round.\n" +
             "Martial Arts\tYou are immune to the Inaction and Grappled conditions.\n";
     private String jobs =
-            "name:str^\tdescription\toffense:int\tdefense:int\ttalents:Talent[;;]\tskills:str{,}int\n" +
-            "Abjurer\tA defensive mage\t1\t9\tHaze;;Warding Tome\tMist Shackles,1,Barricade,2,Stony Shield,3,Body of Iron,1\n" +
-            "Brute\tA hulking bruiser\t10\t\tDestruction\t\n" +
-            "Ninja\tA nimble assassin\t9\t1\tPoison;;Martial Arts\tVanish,2,Smoke Bomb,1,Shadow Dagger,2\n";
+            "name:str^\tdescription\toffense:int\tdefense:int\ttalents:Talent[;;]\tfavorite:Talent\tskills:str{,}int\n" +
+            "Abjurer\tA defensive mage\t1\t9\tHaze;;Warding Tome\tHaze\tMist Shackles,1,Barricade,2,Stony Shield,3,Body of Iron,1\n" +
+            "Brute\tA hulking bruiser\t10\t\tDestruction\tDestruction\t\n" +
+            "Ninja\tA nimble assassin\t9\t1\tPoison;;Martial Arts\tMartial Arts\tVanish,2,Smoke Bomb,1,Shadow Dagger,2\n";
 
     @Test
     public void testBasics()

@@ -10,9 +10,9 @@ public class Job implements Serializable {
   public static final long serialVersionUID = 1L;
 
   public static final Job[] ENTRIES = new Job[] {
-    new Job("Abjurer", "A defensive mage", 1, 9, new Talent[] {Talent.get("Haze"), Talent.get("Warding Tome")}, makeMap("Mist Shackles", 1, "Barricade", 2, "Stony Shield", 3, "Body of Iron", 1)),
-    new Job("Brute", "A hulking bruiser", 10, 0, new Talent[] {Talent.get("Destruction")}, TabLabTools.<String, Integer>makeMap()),
-    new Job("Ninja", "A nimble assassin", 9, 1, new Talent[] {Talent.get("Poison"), Talent.get("Martial Arts")}, makeMap("Vanish", 2, "Smoke Bomb", 1, "Shadow Dagger", 2)),
+    new Job("Abjurer", "A defensive mage", 1, 9, new Talent[] {Talent.get("Haze"), Talent.get("Warding Tome")}, Talent.get("Haze"), makeMap("Mist Shackles", 1, "Barricade", 2, "Stony Shield", 3, "Body of Iron", 1)),
+    new Job("Brute", "A hulking bruiser", 10, 0, new Talent[] {Talent.get("Destruction")}, Talent.get("Destruction"), TabLabTools.<String, Integer>makeMap()),
+    new Job("Ninja", "A nimble assassin", 9, 1, new Talent[] {Talent.get("Poison"), Talent.get("Martial Arts")}, Talent.get("Martial Arts"), makeMap("Vanish", 2, "Smoke Bomb", 1, "Shadow Dagger", 2)),
   };
 
   public static final Map<String, Job> MAPPING = makeMap(
@@ -28,18 +28,21 @@ public class Job implements Serializable {
 
   public Talent[] talents;
 
+  public Talent favorite;
+
   public Map<String, Integer> skills;
 
   public Job() {
   }
 
   public Job(String name, String description, int offense, int defense, Talent[] talents,
-      Map<String, Integer> skills) {
+      Talent favorite, Map<String, Integer> skills) {
     this.name = name;
     this.description = description;
     this.offense = offense;
     this.defense = defense;
     this.talents = talents;
+    this.favorite = favorite;
     this.skills = skills;
   }
 
@@ -69,6 +72,7 @@ public class Job implements Serializable {
     for (int i = 0; i < len; i++) innerR += (innerA ^= 0x8329C6EB9E6AD3E3L * hashBasic(talents[i]));
     a += innerA;
     result ^= innerR * (innerA | 1L) ^ (innerR >>> 27 | innerR << 37);
+    result += (a ^= 0x8329C6EB9E6AD3E3L * hashBasic(favorite));
     result += (a ^= 0x8329C6EB9E6AD3E3L * hashBasic(skills));
     return result * (a | 1L) ^ (result >>> 27 | result << 37);
   }
@@ -96,6 +100,7 @@ public class Job implements Serializable {
     if (offense != other.offense) return false;
     if (defense != other.defense) return false;
     if(!Arrays.deepEquals(talents, other.talents)) return false;
+    if (favorite != null ? !favorite.equals(other.favorite) : other.favorite != null) return false;
     if (skills != null ? !skills.equals(other.skills) : other.skills != null) return false;
     return true;
   }
