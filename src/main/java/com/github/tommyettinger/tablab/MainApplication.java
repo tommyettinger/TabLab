@@ -14,15 +14,14 @@ public class MainApplication {
     public static void main(String[] args) {
         if (args == null || args.length < 1)
             return;
-        String toolsPackage = null, toolsClass = null, numbersPackage = "java.lang", numbersClass = "Double";
+        String toolsPackage = null, toolsClass = null;
         for (int i = 0; i < args.length; i++) {
             if(args[i].startsWith("--"))
             {
                 if(args[i].equalsIgnoreCase("--SquidLib"))
                 {
-                    numbersPackage = toolsPackage = "squidpony.squidmath";
+                    toolsPackage = "squidpony.squidmath";
                     toolsClass = "OrderedMap";
-                    numbersClass = "NumberTools";
                 }
 
                 args[i] = null;
@@ -33,7 +32,7 @@ public class MainApplication {
             TSVReader reader = new TSVReader();
             Path path = Paths.get(inputName);
             reader.read(path.getFileName().toString(), Files.readAllLines(path));
-            CodeWriter writer = new CodeWriter(toolsPackage, toolsClass, numbersPackage, numbersClass);
+            CodeWriter writer = new CodeWriter(toolsPackage, toolsClass);
             System.out.println(writer.write(reader));
             writer.writeTo(reader, new File(""));
         }catch (IOException ignored){}

@@ -1,19 +1,19 @@
 package generated;
 
-import static generated.TabLabTools.makeMap;
-
 import java.io.Serializable;
 import java.util.Map;
+
+import static generated.TabLabTools.makeMap;
 
 public class Talent implements Serializable {
   public static final long serialVersionUID = 1L;
 
   public static final Talent[] ENTRIES = new Talent[] {
-    new Talent("Haze", "Your presence clouds the minds of nearby enemies, decreasing their Accuracy."),
-    new Talent("Warding Tome", "Carrying a Spellbook sharply increases your Defense."),
-    new Talent("Destruction", "Your attacks ignore Defense from shields."),
-    new Talent("Poison", "When your attacks deal damage, half that damage is dealt again in one round."),
-    new Talent("Martial Arts", "You are immune to the Inaction and Grappled conditions."),
+    new Talent("Haze", "Your presence clouds the minds of nearby enemies, decreasing their Accuracy.", -6467888656123427746L),
+    new Talent("Warding Tome", "Carrying a Spellbook sharply increases your Defense.", -1688605669775076427L),
+    new Talent("Destruction", "Your attacks ignore Defense from shields.", -6657196988632068660L),
+    new Talent("Poison", "When your attacks deal damage, half that damage is dealt again in one round.", -5229996026654093878L),
+    new Talent("Martial Arts", "You are immune to the Inaction and Grappled conditions.", -242869033625184715L),
   };
 
   public static final Map<String, Talent> MAPPING = makeMap(
@@ -24,37 +24,23 @@ public class Talent implements Serializable {
 
   public String description;
 
+  private long __code;
+
   public Talent() {
   }
 
-  public Talent(String name, String description) {
+  public Talent(String name, String description, long __code) {
     this.name = name;
     this.description = description;
-  }
-
-  private static long hash64(String data) {
-    if (data == null) return 0;
-    long result = 0x9E3779B97F4A7C94L, a = 0x632BE59BD9B4E019L;
-    final int len = data.length();
-    for (int i = 0; i < len; i++)
-      result += (a ^= 0x8329C6EB9E6AD3E3L * data.charAt(i));
-    return result * (a | 1L) ^ (result >>> 27 | result << 37);
-  }
-
-  private static long hashBasic(Object data) {
-    return (data == null) ? 0 : data.hashCode() * 0x5851F42D4C957F2DL + 0x14057B7EF767814FL;
+    this.__code = __code;
   }
 
   public long hash64() {
-    long result = 0x9E3779B97F4A7C94L, a = 0x632BE59BD9B4E019L, innerR, innerA;
-    int len;
-    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(name));
-    result += (a ^= 0x8329C6EB9E6AD3E3L * hash64(description));
-    return result * (a | 1L) ^ (result >>> 27 | result << 37);
+    return __code;
   }
 
   public int hashCode() {
-    return (int)(hash64() & 0xFFFFFFFFL);
+    return (int)__code;
   }
 
   private static boolean stringArrayEquals(String[] left, String[] right) {
@@ -62,8 +48,7 @@ public class Talent implements Serializable {
     if (left == null || right == null) return false;
     final int len = left.length;
     if(len != right.length) return false;
-    String l, r;
-    for (int i = 0; i < len; i++) { if(((l = left[i]) != (r = right[i])) && (((l == null) != (r == null)) || !l.equals(r))) { return false; } }
+    for (int i = 0; i < len; i++) { if(!java.util.Objects.equals(left[i], right[i])) return false; }
     return true;
   }
 
