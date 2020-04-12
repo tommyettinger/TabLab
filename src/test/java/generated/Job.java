@@ -1,18 +1,19 @@
 package generated;
 
-import static generated.TabLabTools.makeMap;
-
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Map;
+
+import static generated.TabLabTools.makeMap;
 
 public class Job implements Serializable {
   public static final long serialVersionUID = 1L;
 
   public static final Job[] ENTRIES = new Job[] {
-    new Job("Abjurer", "A defensive mage", 1, 9, new Talent[] {Talent.get("Haze"), Talent.get("Warding Tome")}, Talent.get("Haze"), makeMap("Mist Shackles", 1, "Barricade", 2, "Stony Shield", 3, "Body of Iron", 1)),
-    new Job("Brute", "A hulking bruiser", 10, 0, new Talent[] {Talent.get("Destruction")}, Talent.get("Destruction"), TabLabTools.<String, Integer>makeMap()),
-    new Job("Ninja", "A nimble assassin", 9, 1, new Talent[] {Talent.get("Poison"), Talent.get("Martial Arts")}, Talent.get("Martial Arts"), makeMap("Vanish", 2, "Smoke Bomb", 1, "Shadow Dagger", 2)),
+    new Job("Abjurer", "A defensive mage", 1, 9, new Talent[] {Talent.get("Haze"), Talent.get("Warding Tome")}, Talent.get("Haze"), makeMap("Mist Shackles", new int[] {-1, 3}, "Barricade", new int[] {-3, 5}, "Stony Shield",
+    new int[] {1, 1}, "Body of Iron", new int[] {0, 2})),
+    new Job("Brute", "A hulking bruiser", 10, 0, new Talent[] {Talent.get("Destruction")}, Talent.get("Destruction"), TabLabTools.<String, int[]>makeMap()),
+    new Job("Ninja", "A nimble assassin", 9, 1, new Talent[] {Talent.get("Poison"), Talent.get("Martial Arts")}, Talent.get("Martial Arts"), makeMap("Vanish", new int[] {0, 2}, "Smoke Bomb", new int[] {1, 1}, "Shadow Dagger", new int[] {4, -2})),
   };
 
   public static final Map<String, Job> MAPPING = makeMap(
@@ -30,13 +31,13 @@ public class Job implements Serializable {
 
   public Talent favorite;
 
-  public Map<String, Integer> skills;
+  public Map<String, int[]> skills;
 
   public Job() {
   }
 
   public Job(String name, String description, int offense, int defense, Talent[] talents,
-      Talent favorite, Map<String, Integer> skills) {
+      Talent favorite, Map<String, int[]> skills) {
     this.name = name;
     this.description = description;
     this.offense = offense;

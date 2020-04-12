@@ -1,9 +1,9 @@
 package generated;
 
+import static generated.TabLabTools.makeMap;
+
 import java.io.Serializable;
 import java.util.Map;
-
-import static generated.TabLabTools.makeMap;
 
 public class Talent implements Serializable {
   public static final long serialVersionUID = 1L;

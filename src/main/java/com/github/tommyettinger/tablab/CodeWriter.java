@@ -129,6 +129,7 @@ public class CodeWriter
         ClassName[] crossFields = new ClassName[fieldCount];
         ClassName[] crossExtras = new ClassName[fieldCount];
         String[] arraySeparators = new String[fieldCount];
+        String[] extraSeparators = new String[fieldCount];
         String[] fieldNames = new String[fieldCount];
         ParameterizedTypeName mapTypename = null;
         int mapKeyIndex = -1;
@@ -169,6 +170,19 @@ public class CodeWriter
                             reader.keyColumn = section.substring(0, colon);
                     }
                 }
+            }
+            else if(arrayStart >= 0 && mapStart >= 0) { // map case, array values
+                crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, mapStart)) ? VOI : ClassName.get(packageName, tmp);
+                typenameExtras1[i] = typenameExtra1 = typenames.getOrDefault(tmp, crossFields[i]).box();
+                crossExtras[i] = typenames.containsKey(tmp = section.substring(mapEnd + 1, arrayStart)) ? VOI : ClassName.get(packageName, tmp);
+                typenameExtra2 = typenames.getOrDefault(tmp, crossExtras[i]);
+                stringFields[i] = typenameExtra1.equals(STR);
+                stringExtras[i] = typenameExtra2.equals(STR);
+                typenameExtras2[i] = typenameExtra2 = ArrayTypeName.of(typenameExtra2);
+                typename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), typenameExtra1, typenameExtra2);
+                arraySeparators[i] = section.substring(mapStart+1, mapEnd);
+                extraSeparators[i] = section.substring(arrayStart+1, section.indexOf(']'));
+
             }
             else if(arrayStart >= 0) {
                 crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, arrayStart)) ? VOI : ClassName.get(packageName, tmp);
@@ -213,7 +227,14 @@ public class CodeWriter
                 for (; j < fieldCount; j++) {
                     if(VOI.equals(typenameFields[j]))
                         continue;
-                    if (arraySeparators[j] != null) {
+                    if (extraSeparators[j] != null) { // a map with array values
+                        if (!reader.contentLines[i][j].contains(arraySeparators[j]))
+                            cbb.add("$T.<$T, $T>makeMap()", tlt, typenameExtras1[j], typenameExtras2[j]);
+                        else
+                            cbb.add("$T.makeMap($L)", tlt,
+                                    stringMapArrayLiterals((stringFields[j] ? 0 : -1), crossFields[j], crossExtras[j], 80,
+                                            reader.contentLines[i][j], arraySeparators[j], extraSeparators[j], typenameExtras2[j]));
+                    } else if (arraySeparators[j] != null) {
                         if (typenameExtras1[j] != null) {
                             if (!reader.contentLines[i][j].contains(arraySeparators[j]))
                                 cbb.add("$T.<$T, $T>makeMap()", tlt, typenameExtras1[j], typenameExtras2[j]);
@@ -595,6 +616,109 @@ public class CodeWriter
             }
             else
             {
+                if (++s < values.length) {
+                    if (result.length() + value.length() + 2 - latestBreak < lineLength)
+                        result.append(value).append(", ");
+                    else if (result.length() + value.length() + 1 - latestBreak < lineLength)
+                    {
+                        result.append(value).append(',');
+                        latestBreak = result.length();
+                        result.append('\n');
+                    }
+                    else {
+                        latestBreak = result.length();
+                        result.append(value).append(",\n");
+                    }
+                } else {
+                    result.append(value);
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    private static String stringMapArrayLiterals(int alternationCode, ClassName cross1, ClassName cross2, int lineLength,
+                                          String content, String majorSeparator, String minorSeparator, TypeName valueType) {
+        String[] values = StringKit.split(content, majorSeparator);
+        StringBuilder result = new StringBuilder(values.length * 8),
+                work = new StringBuilder(40 + lineLength);
+        int latestBreak = 0;
+        String value;
+        for (int s = 0; s < values.length;) {
+            value = values[s];
+            if(value == null || value.isEmpty()) {
+                ++s;
+                continue;
+            }
+            if((cross2 == null || (s & 1) == 0) && !VOI.equals(cross1)) {
+                work.setLength(0);
+                work.append(cross1.simpleName()).append(".get(\"").append(value).append("\")");
+                if (++s < values.length) {
+                    work.append(",");
+                    if(result.length() + work.length() + 1 - latestBreak < lineLength)
+                        result.append(work).append(' ');
+                    else
+                    {
+                        latestBreak = result.length();
+                        result.append(work).append('\n');
+                    }
+                } else {
+                    result.append(work);
+                }
+            }
+            else if((s & 1) == 1 && cross2 != null && !VOI.equals(cross2)){
+                work.setLength(0);
+                work.append(cross2.packageName()).append('.').append(cross2.simpleName()).append(".get(\"").append(value).append("\")");
+                if (++s < values.length) {
+                    work.append(",");
+                    if(result.length() + work.length() + 1 - latestBreak < lineLength)
+                        result.append(work).append(' ');
+                    else
+                    {
+                        latestBreak = result.length();
+                        result.append(work).append('\n');
+                    }
+                } else {
+                    result.append(work);
+                }
+            }
+            else if(alternationCode == 0 && (s & 1) == alternationCode) {
+                work.setLength(0);
+                work.append('"');
+                for (int i = 0; i < value.length(); i++) {
+                    char c = value.charAt(i);
+                    // trivial case: single quote must not be escaped
+                    if (c == '\'') {
+                        work.append("'");
+                        continue;
+                    }
+                    // trivial case: double quotes must be escaped
+                    if (c == '\"') {
+                        work.append("\\\"");
+                        continue;
+                    }
+                    // default case: just let character literal do its work
+                    work.append(characterLiteral(c));
+                }
+                if (++s < values.length) {
+                    work.append("\",");
+                    if(result.length() + work.length() + 1 - latestBreak < lineLength)
+                        result.append(work).append(' ');
+                    else
+                    {
+                        latestBreak = result.length();
+                        result.append(work).append('\n');
+                    }
+                } else {
+                    result.append(work).append('"');
+                }
+            }
+            else
+            {
+                if((s & 1) == 1)
+                    value = CodeBlock.of("new $T {$L}", valueType,
+                            stringLiterals(alternationCode >= 1 ? 2 : -1, cross2, null, 80,
+                                    StringKit.split(value, minorSeparator))).toString();
                 if (++s < values.length) {
                     if (result.length() + value.length() + 2 - latestBreak < lineLength)
                         result.append(value).append(", ");
