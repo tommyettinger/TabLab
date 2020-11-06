@@ -6,7 +6,7 @@
 
     <groupId>com.github.tommyettinger</groupId>
     <artifactId>tablab</artifactId>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
     <modules>
     </modules>
 
@@ -51,14 +51,15 @@
     </distributionManagement>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.version>3.7.0</maven.compiler.version>
-        <maven.javadoc.version>3.0.0</maven.javadoc.version>
-        <maven.resources.version>3.1.0</maven.resources.version>
-        <maven.source.version>3.0.1</maven.source.version>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.version>3.8.1</maven.compiler.version>
+        <maven.javadoc.version>3.2.0</maven.javadoc.version>
+        <maven.resources.version>3.2.0</maven.resources.version>
+        <maven.source.version>3.2.1</maven.source.version>
         <maven.gpg.version>1.6</maven.gpg.version>
         <jdk.version>1.8</jdk.version>
-        <junit.version>4.11</junit.version>
-        <regexodus.version>0.1.9</regexodus.version>
+        <junit.version>4.13.1</junit.version>
+        <regexodus.version>0.1.10</regexodus.version>
         <javapoet.version>1.9.0</javapoet.version>
     </properties>
 

@@ -16,16 +16,21 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class CodeWriter
 {
     public String toolsPackage = null, toolsClass = null;
+    public ClassName mapClass;
     public CodeWriter()
     {
+        mapClass = ClassName.get("java.util", "Map");
     }
     public CodeWriter(String toolsPackage, String toolsClass)
     {
-        if(toolsPackage != null && !toolsPackage.isEmpty() && toolsClass != null && !toolsClass.isEmpty())
-        {
+        if(toolsPackage != null && !toolsPackage.isEmpty())
             this.toolsPackage = toolsPackage;
+        if(toolsClass != null && !toolsClass.isEmpty())
             this.toolsClass = toolsClass;
-        }
+        if((toolsPackage != null) && (toolsPackage.equalsIgnoreCase("--libGDX")))
+            mapClass = ClassName.get("com.badlogic.gdx.utils", "OrderedMap");
+        else
+            mapClass = ClassName.get("java.util", "Map");
     }
 
     private static final Modifier[] mods = {Modifier.PUBLIC};
@@ -86,11 +91,19 @@ public class CodeWriter
 //                    outputDirectory = outputDirectory.resolve(packageComponent);
 //                }
 //            }
-            if(toolsClass == null) {
+            if(toolsPackage == null) {
                 try (Writer writer = new OutputStreamWriter(Files.newOutputStream(
                         Files.createDirectories(p.resolve(jf.packageName.replace('.', '/'))).resolve("TabLabTools.java")), UTF_8)) {
                     writer.write(
                             new Scanner(CodeWriter.class.getResourceAsStream("/TabLabTools.txt"), "UTF-8").useDelimiter("\\A").next()
+                    );
+                }
+            }
+            else if(toolsPackage.equalsIgnoreCase("--libGDX")) {
+                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(
+                    Files.createDirectories(p.resolve(jf.packageName.replace('.', '/'))).resolve("TabLabTools.java")), UTF_8)) {
+                    writer.write(
+                        new Scanner(CodeWriter.class.getResourceAsStream("/TabLabToolsLibGDX.txt"), "UTF-8").useDelimiter("\\A").next()
                     );
                 }
             }
@@ -174,7 +187,7 @@ public class CodeWriter
                 stringFields[i] = typenameExtra1.equals(STR);
                 stringExtras[i] = typenameExtra2.equals(STR);
                 typenameExtras2[i] = typenameExtra2 = ArrayTypeName.of(typenameExtra2);
-                typename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), typenameExtra1, typenameExtra2);
+                typename = ParameterizedTypeName.get(mapClass, typenameExtra1, typenameExtra2);
                 arraySeparators[i] = section.substring(mapStart+1, mapEnd);
                 extraSeparators[i] = section.substring(arrayStart+1, section.indexOf(']'));
 
@@ -193,7 +206,7 @@ public class CodeWriter
                 typenameExtras2[i] = typenameExtra2 = typenames.getOrDefault(tmp, crossExtras[i]).box();
                 stringFields[i] = typenameExtra1.equals(STR);
                 stringExtras[i] = typenameExtra2.equals(STR);
-                typename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), typenameExtra1, typenameExtra2);
+                typename = ParameterizedTypeName.get(mapClass, typenameExtra1, typenameExtra2);
                 arraySeparators[i] = section.substring(mapStart+1, mapEnd);
             }
             typenameFields[i] = typename;
@@ -202,7 +215,7 @@ public class CodeWriter
             fieldNames[i] = field;
             if(field.equals(reader.keyColumn) && typename.equals(STR)) {
                 if (typeLen < 0) {
-                    mapTypename = ParameterizedTypeName.get(ClassName.get("java.util", "Map"), STR, myName);
+                    mapTypename = ParameterizedTypeName.get(mapClass, STR, myName);
                     mapKeyIndex = i;
                 }
             }

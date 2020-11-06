@@ -23,6 +23,11 @@ public class MainApplication {
                     toolsPackage = "squidpony.squidmath";
                     toolsClass = "OrderedMap";
                 }
+                else if(args[i].equalsIgnoreCase("--libGDX"))
+                {
+                    toolsPackage = "--libGDX";
+                    toolsClass = null;
+                }
 
                 args[i] = null;
             }
