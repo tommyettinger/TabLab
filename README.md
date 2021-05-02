@@ -80,7 +80,7 @@ An example header line looks like:
 
 ```
 name	description	offense:int	defense:int	talents:Talent[;;]	skills:str{,}int
-``
+```
 
 Here, name and description are String type because no type is specified, offense and defense are int type, talents is an
 array of Talent values (where Talent is expected to be made by TabLab at some point before this class is compiled)
