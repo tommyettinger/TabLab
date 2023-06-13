@@ -1,13 +1,14 @@
 package com.github.tommyettinger.tablab;
 
-import regexodus.Pattern;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Created by Tommy Ettinger on 9/23/2017.
@@ -22,7 +23,8 @@ public class TSVReader {
     }
     public void read(String filename, String text)
     {
-        read(filename, Pattern.compile("\\V+").matcher(text).foundStrings());
+        read(filename, Pattern.compile("\\V+").matcher(text).results().map(MatchResult::group).collect(Collectors.toList()));
+//                Pattern.compile("\\V+").matcher(text).foundStrings());
     }
     public void read(String filename, List<String> allLines)
     {
