@@ -1,4 +1,4 @@
-package generated;
+package generated.tablab;
 import java.util.LinkedHashMap;
 public class TabLabTools {
     /**

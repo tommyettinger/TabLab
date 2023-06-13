@@ -14,7 +14,7 @@ public class MainApplication {
     public static void main(String[] args) {
         if (args == null || args.length < 1)
             return;
-        String toolsPackage = null, toolsClass = null;
+        String toolsPackage = null, toolsClass = null, makeMethod = "makeMap";
         for (int i = 0; i < args.length; i++) {
             if(args[i].startsWith("--"))
             {
@@ -22,6 +22,12 @@ public class MainApplication {
                 {
                     toolsPackage = "squidpony.squidmath";
                     toolsClass = "OrderedMap";
+                }
+                else if(args[i].equalsIgnoreCase("--jdkgdxds"))
+                {
+                    toolsPackage = "com.github.tommyettinger.ds";
+                    toolsClass = "ObjectObjectOrderedMap";
+                    makeMethod = "with";
                 }
                 else if(args[i].equalsIgnoreCase("--libGDX"))
                 {
@@ -37,7 +43,7 @@ public class MainApplication {
             TSVReader reader = new TSVReader();
             Path path = Paths.get(inputName);
             reader.read(path.getFileName().toString(), Files.readAllLines(path));
-            CodeWriter writer = new CodeWriter(toolsPackage, toolsClass);
+            CodeWriter writer = new CodeWriter(toolsPackage, toolsClass, makeMethod);
             System.out.println(writer.write(reader));
             writer.writeTo(reader, new File(""));
         }catch (IOException ignored){}

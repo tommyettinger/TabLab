@@ -25,6 +25,9 @@ out/
 # Gradle temporary files
 .gradle/
 
+# Generated code
+test/java/generated/
+
 # jEdit garbage
 *~
 *#*#

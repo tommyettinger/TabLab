@@ -23,13 +23,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class CodeWriter
 {
-    public String toolsPackage = null, toolsClass = null;
+    public String toolsPackage = null, toolsClass = null, makeMethod;
     public ClassName mapClass;
     public CodeWriter()
     {
         mapClass = ClassName.get("java.util", "Map");
+        makeMethod = "makeMap";
     }
-    public CodeWriter(String toolsPackage, String toolsClass)
+    public CodeWriter(String toolsPackage, String toolsClass, String maker)
     {
         if(toolsPackage != null && !toolsPackage.isEmpty())
             this.toolsPackage = toolsPackage;
@@ -39,6 +40,10 @@ public class CodeWriter
             mapClass = ClassName.get("com.badlogic.gdx.utils", "OrderedMap");
         else
             mapClass = ClassName.get("java.util", "Map");
+        if(makeMethod != null)
+            makeMethod = maker;
+        else
+            makeMethod = "makeMap";
     }
 
     private static final Modifier[] mods = {Modifier.PUBLIC};
@@ -103,7 +108,7 @@ public class CodeWriter
                 try (Writer writer = new OutputStreamWriter(Files.newOutputStream(
                         Files.createDirectories(p.resolve(jf.packageName.replace('.', '/'))).resolve("TabLabTools.java")), UTF_8)) {
                     writer.write(
-                            new Scanner(CodeWriter.class.getResourceAsStream("/TabLabTools.txt"), "UTF-8").useDelimiter("\\A").next()
+                            new Scanner(Objects.requireNonNull(CodeWriter.class.getResourceAsStream("/TabLabTools.txt")), "UTF-8").useDelimiter("\\A").next()
                     );
                 }
             }
@@ -111,7 +116,7 @@ public class CodeWriter
                 try (Writer writer = new OutputStreamWriter(Files.newOutputStream(
                     Files.createDirectories(p.resolve(jf.packageName.replace('.', '/'))).resolve("TabLabTools.java")), UTF_8)) {
                     writer.write(
-                        new Scanner(CodeWriter.class.getResourceAsStream("/TabLabToolsLibGDX.txt"), "UTF-8").useDelimiter("\\A").next()
+                        new Scanner(Objects.requireNonNull(CodeWriter.class.getResourceAsStream("/TabLabToolsLibGDX.txt")), "UTF-8").useDelimiter("\\A").next()
                     );
                 }
             }
@@ -124,10 +129,11 @@ public class CodeWriter
 
     public JavaFile write(TSVReader reader)
     {
-        String packageName = "generated";
+        String packageName = "generated.tablab";
         ClassName tlt;
-        TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods).addSuperinterface(Serializable.class);
-        tb.addField(FieldSpec.builder(TypeName.LONG, "serialVersionUID", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer("1L").build());
+        TypeSpec.Builder tb = TypeSpec.classBuilder(reader.name).addModifiers(mods);
+//        tb.addSuperinterface(Serializable.class);
+//        tb.addField(FieldSpec.builder(TypeName.LONG, "serialVersionUID", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer("1L").build());
         tb.addMethod(MethodSpec.constructorBuilder().addModifiers(mods).build());
         MethodSpec.Builder make = MethodSpec.constructorBuilder().addModifiers(mods);
         if(toolsClass == null)
@@ -248,17 +254,17 @@ public class CodeWriter
                         continue;
                     if (extraSeparators[j] != null) { // a map with array values
                         if (!reader.contentLines[i][j].contains(arraySeparators[j]))
-                            cbb.add("$T.<$T, $T>makeMap()", tlt, typenameExtras1[j], typenameExtras2[j]);
+                            cbb.add("$T.<$T, $T>$L()", tlt, typenameExtras1[j], typenameExtras2[j], makeMethod);
                         else
-                            cbb.add("$T.makeMap($L)", tlt,
+                            cbb.add("$T.$L($L)", tlt, makeMethod,
                                     stringMapArrayLiterals((stringFields[j] ? 0 : -1), crossFields[j], crossExtras[j], 80,
                                             reader.contentLines[i][j], arraySeparators[j], extraSeparators[j], typenameExtras2[j]));
                     } else if (arraySeparators[j] != null) {
                         if (typenameExtras1[j] != null) {
                             if (!reader.contentLines[i][j].contains(arraySeparators[j]))
-                                cbb.add("$T.<$T, $T>makeMap()", tlt, typenameExtras1[j], typenameExtras2[j]);
+                                cbb.add("$T.<$T, $T>$L()", tlt, typenameExtras1[j], typenameExtras2[j], makeMethod);
                             else
-                                cbb.add("$T.makeMap($L)", tlt,
+                                cbb.add("$T.$L($L)", tlt, makeMethod,
                                         stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1, crossFields[j], crossExtras[j], 80,
                                                 StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
                         } else {
@@ -295,13 +301,13 @@ public class CodeWriter
                     mapStuff[i * 2] = reader.contentLines[i][mapKeyIndex];
                     mapStuff[i * 2 + 1] = "ENTRIES[" + i + "]";
                 }
-                cbb.add("$T.makeMap(\n$L)", tlt, stringLiterals(0, VOI, VOI, 80, mapStuff)); // alternationCode: (stringFields[mapKeyIndex] ? 0 : -1)
+                cbb.add("$T.$L(\n$L)", tlt, makeMethod, stringLiterals(0, VOI, VOI, 80, mapStuff)); // alternationCode: (stringFields[mapKeyIndex] ? 0 : -1)
                 tb.addField(FieldSpec.builder(mapTypename, "MAPPING", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
                 MethodSpec.Builder mb = MethodSpec.methodBuilder("get").addModifiers(Modifier.PUBLIC, Modifier.STATIC).returns(myName).addParameter(STR, "item").addCode("return MAPPING.get($N);\n", "item");
                 tb.addMethod(mb.build());
             }
         }
-        return JavaFile.builder(packageName, tb.build()).addStaticImport(tlt, "makeMap").skipJavaLangImports(true).build();
+        return JavaFile.builder(packageName, tb.build()).skipJavaLangImports(true).build();
     }
     /**
      * Big constant 0.
@@ -412,14 +418,14 @@ public class CodeWriter
     private static String characterLiteral(char c) {
         // see https://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.10.6
         switch (c) {
-            case '\b': return "\\b"; /* \u0008: backspace (BS) */
-            case '\t': return "\\t"; /* \u0009: horizontal tab (HT) */
-            case '\n': return "\\n"; /* \u000a: linefeed (LF) */
-            case '\f': return "\\f"; /* \u000c: form feed (FF) */
-            case '\r': return "\\r"; /* \u000d: carriage return (CR) */
-            case '\"': return "\"";  /* \u0022: double quote (") */
-            case '\'': return "\\'"; /* \u0027: single quote (') */
-            case '\\': return "\\\\";  /* \u005c: backslash (\) */
+            case '\b': return "\\b";  /* \\u0008: backspace (BS) */
+            case '\t': return "\\t";  /* \\u0009: horizontal tab (HT) */
+            case '\n': return "\\n";  /* \\u000a: linefeed (LF) */
+            case '\f': return "\\f";  /* \\u000c: form feed (FF) */
+            case '\r': return "\\r";  /* \\u000d: carriage return (CR) */
+            case '\"': return "\"";   /* \\u0022: double quote (") */
+            case '\'': return "\\'";  /* \\u0027: single quote (') */
+            case '\\': return "\\\\"; /* \\u005c: backslash (\) */
             default:
                 return Character.isISOControl(c) ? String.format("\\u%04x", (int) c) : Character.toString(c);
         }
