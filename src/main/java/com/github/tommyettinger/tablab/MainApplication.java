@@ -43,9 +43,15 @@ public class MainApplication {
             TSVReader reader = new TSVReader();
             Path path = Paths.get(inputName);
             reader.read(path.getFileName().toString(), Files.readAllLines(path));
-            CodeWriter writer = new CodeWriter(toolsPackage, toolsClass, makeMethod);
-            System.out.println(writer.write(reader));
-            writer.writeTo(reader, new File(""));
+            if("com.github.tommyettinger.ds".equals(toolsPackage)){
+                CodeWriterJdkgdxds cwj = new CodeWriterJdkgdxds();
+                System.out.println(cwj.write(reader));
+                cwj.writeTo(reader, new File(""));
+            } else {
+                CodeWriter writer = new CodeWriter(toolsPackage, toolsClass, makeMethod);
+                System.out.println(writer.write(reader));
+                writer.writeTo(reader, new File(""));
+            }
         }catch (IOException ignored){}
     }
 }

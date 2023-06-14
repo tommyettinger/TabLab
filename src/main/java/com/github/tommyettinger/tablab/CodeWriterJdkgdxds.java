@@ -19,10 +19,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class CodeWriterJdkgdxds
 {
     public String toolsPackage = "com.github.tommyettinger.ds", toolsClass = "ObjectObjectOrderedMap", makeMethod = "with";
-    public ClassName mapClass;
+    public ClassName mapClass = ClassName.get(toolsPackage, toolsClass);
     public CodeWriterJdkgdxds()
     {
-        mapClass = ClassName.get(toolsPackage, toolsClass);
     }
     public CodeWriterJdkgdxds(String toolsPackage, String toolsClass, String maker)
     {
@@ -33,7 +32,7 @@ public class CodeWriterJdkgdxds
     private final TypeName STR = TypeName.get(String.class);
     private final ClassName VOI = ClassName.get(Void.class);
     public final HashMap<String, TypeName> typenames = new HashMap<>(32);
-    public final HashMap<TypeName, ParameterizedTypeName> maps = new HashMap<>(32);
+    public final HashMap<TypeName, TypeName> maps = new HashMap<>(32);
     public final HashMap<TypeName, String> defaults = new HashMap<>(32);
     {
         typenames.put("String", STR);
@@ -72,19 +71,19 @@ public class CodeWriterJdkgdxds
         maps.put(ParameterizedTypeName.get(mapClass, TypeName.LONG.box(), TypeName.OBJECT),
                 ParameterizedTypeName.get(ClassName.get(toolsPackage, "LongObjectOrderedMap"), TypeName.OBJECT));
         maps.put(ParameterizedTypeName.get(mapClass, TypeName.LONG.box(), TypeName.FLOAT.box()),
-                ParameterizedTypeName.get(ClassName.get(toolsPackage, "LongFloatOrderedMap")));
+                (ClassName.get(toolsPackage, "LongFloatOrderedMap")));
         maps.put(ParameterizedTypeName.get(mapClass, TypeName.LONG.box(), TypeName.LONG.box()),
-                ParameterizedTypeName.get(ClassName.get(toolsPackage, "LongLongOrderedMap")));
+                (ClassName.get(toolsPackage, "LongLongOrderedMap")));
         maps.put(ParameterizedTypeName.get(mapClass, TypeName.LONG.box(), TypeName.INT.box()),
-                ParameterizedTypeName.get(ClassName.get(toolsPackage, "LongIntOrderedMap")));
+                (ClassName.get(toolsPackage, "LongIntOrderedMap")));
         maps.put(ParameterizedTypeName.get(mapClass, TypeName.INT.box(), TypeName.OBJECT),
                 ParameterizedTypeName.get(ClassName.get(toolsPackage, "IntObjectOrderedMap"), TypeName.OBJECT));
         maps.put(ParameterizedTypeName.get(mapClass, TypeName.INT.box(), TypeName.FLOAT.box()),
-                ParameterizedTypeName.get(ClassName.get(toolsPackage, "IntFloatOrderedMap")));
+                (ClassName.get(toolsPackage, "IntFloatOrderedMap")));
         maps.put(ParameterizedTypeName.get(mapClass, TypeName.INT.box(), TypeName.LONG.box()),
-                ParameterizedTypeName.get(ClassName.get(toolsPackage, "IntLongOrderedMap")));
+                (ClassName.get(toolsPackage, "IntLongOrderedMap")));
         maps.put(ParameterizedTypeName.get(mapClass, TypeName.INT.box(), TypeName.INT.box()),
-                ParameterizedTypeName.get(ClassName.get(toolsPackage, "IntIntOrderedMap")));
+                (ClassName.get(toolsPackage, "IntIntOrderedMap")));
     }
     public String writeToString(TSVReader reader)
     {
@@ -136,8 +135,8 @@ public class CodeWriterJdkgdxds
         String[] arraySeparators = new String[fieldCount];
         String[] extraSeparators = new String[fieldCount];
         String[] fieldNames = new String[fieldCount];
-        ParameterizedTypeName mapTypename = null;
-        int mapKeyIndex = -1;
+        ParameterizedTypeName mappingTypename = null;
+        int mappingKeyIndex = -1;
         ClassName myName = ClassName.get(packageName, reader.name);
         for (int i = 0; i < fieldCount; i++) {
             section = reader.headerLine[i];
@@ -207,13 +206,16 @@ public class CodeWriterJdkgdxds
                         (typenameExtra1.isBoxedPrimitive() ? typenameExtra1 : TypeName.OBJECT),
                         (typenameExtra2.isBoxedPrimitive() ? typenameExtra2 : TypeName.OBJECT));
                 if(maps.containsKey(alternate)) {
-                    ParameterizedTypeName ptn = maps.get(alternate);
-                    ArrayList<TypeName> extras = new ArrayList<>(2);
-                    if(typenameExtra1.equals(TypeName.OBJECT))
-                        extras.add(typenameExtra1);
-                    if(typenameExtra2.equals(TypeName.OBJECT))
-                        extras.add(typenameExtra2);
-                    typename = ParameterizedTypeName.get(ptn.rawType, extras.toArray(new TypeName[0]));
+                    TypeName tn = maps.get(alternate);
+                    if(tn instanceof ParameterizedTypeName) {
+                        ArrayList<TypeName> extras = new ArrayList<>(2);
+                        if (!typenameExtra1.isBoxedPrimitive())
+                            extras.add(typenameExtra1);
+                        if (!typenameExtra2.isBoxedPrimitive())
+                            extras.add(typenameExtra2);
+                        typename = ParameterizedTypeName.get(((ParameterizedTypeName)tn).rawType, extras.toArray(new TypeName[0]));
+                    }
+                    else typename = tn;
                 }
                 else
                     typename = ParameterizedTypeName.get(mapClass, typenameExtra1, typenameExtra2);
@@ -226,8 +228,8 @@ public class CodeWriterJdkgdxds
             fieldNames[i] = field;
             if(field.equals(reader.keyColumn) && typename.equals(STR)) {
                 if (typeLen < 0) {
-                    mapTypename = ParameterizedTypeName.get(mapClass, STR, myName);
-                    mapKeyIndex = i;
+                    mappingTypename = ParameterizedTypeName.get(mapClass, STR, myName);
+                    mappingKeyIndex = i;
                 }
             }
             make.addParameter(typename, field).addStatement("this.$N = $N", field, field);
@@ -251,16 +253,33 @@ public class CodeWriterJdkgdxds
                         continue;
                     if (extraSeparators[j] != null) { // a map with array values
                         if (!reader.contentLines[i][j].contains(arraySeparators[j]))
-                            cbb.add("$T.<$T, $T>$L()", tlt, typenameExtras1[j], typenameExtras2[j], makeMethod);
+                        {
+                            if(typenameExtras1[j].isBoxedPrimitive() && typenameExtras2[j].isBoxedPrimitive())
+                                cbb.add("$T.$L()", tlt, typenameExtras1[j], typenameExtras2[j], makeMethod);
+                            else if(typenameExtras1[j].isBoxedPrimitive())
+                                cbb.add("$T.<$T>$L()", tlt, typenameExtras2[j], makeMethod);
+                            else if(typenameExtras2[j].isBoxedPrimitive())
+                                cbb.add("$T.<$T>$L()", tlt, typenameExtras1[j], makeMethod);
+                            else
+                                cbb.add("$T.<$T, $T>$L()", tlt, typenameExtras1[j], typenameExtras2[j], makeMethod);
+                        }
                         else
                             cbb.add("$T.$L($L)", tlt, makeMethod,
                                     stringMapArrayLiterals((stringFields[j] ? 0 : -1), crossFields[j], crossExtras[j], 80,
                                             reader.contentLines[i][j], arraySeparators[j], extraSeparators[j], typenameExtras2[j]));
                     } else if (arraySeparators[j] != null) {
                         if (typenameExtras1[j] != null) {
-                            if (!reader.contentLines[i][j].contains(arraySeparators[j]))
-                                cbb.add("$T.<$T, $T>$L()", tlt, typenameExtras1[j], typenameExtras2[j], makeMethod);
-                            else
+                            if (!reader.contentLines[i][j].contains(arraySeparators[j])) {
+                                if(typenameExtras1[j].isBoxedPrimitive() && typenameExtras2[j].isBoxedPrimitive())
+                                    cbb.add("$T.$L()", tlt, typenameExtras1[j], typenameExtras2[j], makeMethod);
+                                else if(typenameExtras1[j].isBoxedPrimitive())
+                                    cbb.add("$T.<$T>$L()", tlt, typenameExtras2[j], makeMethod);
+                                else if(typenameExtras2[j].isBoxedPrimitive())
+                                    cbb.add("$T.<$T>$L()", tlt, typenameExtras1[j], makeMethod);
+                                else
+                                    cbb.add("$T.<$T, $T>$L()", tlt, typenameExtras1[j], typenameExtras2[j], makeMethod);
+
+                            } else
                                 cbb.add("$T.$L($L)", tlt, makeMethod,
                                         stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1, crossFields[j], crossExtras[j], 80,
                                                 StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
@@ -291,15 +310,15 @@ public class CodeWriterJdkgdxds
             cbb.add("}");
 
             tb.addField(FieldSpec.builder(atn, "ENTRIES", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
-            if (mapKeyIndex >= 0) {
+            if (mappingKeyIndex >= 0) {
                 cbb = CodeBlock.builder();
                 String[] mapStuff = new String[reader.contentLines.length * 2];
                 for (int i = 0; i < reader.contentLines.length; i++) {
-                    mapStuff[i * 2] = reader.contentLines[i][mapKeyIndex];
+                    mapStuff[i * 2] = reader.contentLines[i][mappingKeyIndex];
                     mapStuff[i * 2 + 1] = "ENTRIES[" + i + "]";
                 }
-                cbb.add("$T.$L(\n$L)", tlt, makeMethod, stringLiterals(0, VOI, VOI, 80, mapStuff)); // alternationCode: (stringFields[mapKeyIndex] ? 0 : -1)
-                tb.addField(FieldSpec.builder(mapTypename, "MAPPING", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
+                cbb.add("$T.$L(\n$L)", tlt, makeMethod, stringLiterals(0, VOI, VOI, 80, mapStuff)); // alternationCode: (stringFields[mappingKeyIndex] ? 0 : -1)
+                tb.addField(FieldSpec.builder(mappingTypename, "MAPPING", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).initializer(cbb.build()).build());
                 MethodSpec.Builder mb = MethodSpec.methodBuilder("get").addModifiers(Modifier.PUBLIC, Modifier.STATIC).returns(myName).addParameter(STR, "item").addCode("return MAPPING.get($N);\n", "item");
                 tb.addMethod(mb.build());
             }

@@ -44,7 +44,18 @@ public class TSVReaderTest {
         reader.read("Job", jobs);
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/java/"));
-
+    }
+    @Test
+    public void testWriterJdkgdxds()
+    {
+        TSVReader reader = new TSVReader();
+        CodeWriterJdkgdxds writer = new CodeWriterJdkgdxds();
+        reader.read("Talent", talents);
+        System.out.println(writer.write(reader));
+        writer.writeTo(reader, new File("src/test/java/"));
+        reader.read("Job", jobs);
+        System.out.println(writer.write(reader));
+        writer.writeTo(reader, new File("src/test/java/"));
     }
 
     @Test

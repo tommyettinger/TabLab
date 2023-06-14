@@ -25,7 +25,7 @@ out/
 .gradle/
 
 # Generated code
-test/java/generated/
+**/test/java/generated/**
 
 # jEdit garbage
 *~
