@@ -1,17 +1,12 @@
 package com.github.tommyettinger.tablab;
 
-import com.squareup.javapoet.ArrayTypeName;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 
 import javax.lang.model.element.Modifier;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -21,37 +16,26 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * Created by Tommy Ettinger on 9/23/2017.
  */
-public class CodeWriter
+public class CodeWriterJdkgdxds
 {
-    public String toolsPackage = null, toolsClass = null, makeMethod;
+    public String toolsPackage = "com.github.tommyettinger.ds", toolsClass = "ObjectObjectOrderedMap", makeMethod = "with";
     public ClassName mapClass;
-    public CodeWriter()
+    public CodeWriterJdkgdxds()
     {
-        mapClass = ClassName.get("java.util", "Map");
-        makeMethod = "makeMap";
+        mapClass = ClassName.get(toolsPackage, toolsClass);
     }
-    public CodeWriter(String toolsPackage, String toolsClass, String maker)
+    public CodeWriterJdkgdxds(String toolsPackage, String toolsClass, String maker)
     {
-        if(toolsPackage != null && !toolsPackage.isEmpty())
-            this.toolsPackage = toolsPackage;
-        if(toolsClass != null && !toolsClass.isEmpty())
-            this.toolsClass = toolsClass;
-        if((toolsPackage != null) && (toolsPackage.equalsIgnoreCase("--libGDX")))
-            mapClass = ClassName.get("com.badlogic.gdx.utils", "OrderedMap");
-        else
-            mapClass = ClassName.get("java.util", "Map");
-        if(makeMethod != null)
-            makeMethod = maker;
-        else
-            makeMethod = "makeMap";
+        this();
     }
 
-    private static final Modifier[] mods = {Modifier.PUBLIC};
-    private static final TypeName STR = TypeName.get(String.class);
-    private static final ClassName VOI = ClassName.get(Void.class);
-    public static final HashMap<String, TypeName> typenames = new HashMap<>(32);
-    public static final HashMap<TypeName, String> defaults = new HashMap<>(32);
-    static {
+    private final Modifier[] mods = {Modifier.PUBLIC};
+    private final TypeName STR = TypeName.get(String.class);
+    private final ClassName VOI = ClassName.get(Void.class);
+    public final HashMap<String, TypeName> typenames = new HashMap<>(32);
+    public final HashMap<TypeName, ParameterizedTypeName> maps = new HashMap<>(32);
+    public final HashMap<TypeName, String> defaults = new HashMap<>(32);
+    {
         typenames.put("String", STR);
         typenames.put("str", STR);
         typenames.put("s", STR);
@@ -79,6 +63,28 @@ public class CodeWriter
         defaults.put(TypeName.LONG, "0L");
         defaults.put(TypeName.FLOAT, "0.0f");
         defaults.put(TypeName.DOUBLE, "0.0");
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.OBJECT, TypeName.FLOAT.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "ObjectFloatOrderedMap"), TypeName.OBJECT));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.OBJECT, TypeName.LONG.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "ObjectLongOrderedMap"), TypeName.OBJECT));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.OBJECT, TypeName.INT.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "ObjectLongOrderedMap"), TypeName.OBJECT));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.LONG.box(), TypeName.OBJECT),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "LongObjectOrderedMap"), TypeName.OBJECT));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.LONG.box(), TypeName.FLOAT.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "LongFloatOrderedMap")));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.LONG.box(), TypeName.LONG.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "LongLongOrderedMap")));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.LONG.box(), TypeName.INT.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "LongIntOrderedMap")));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.INT.box(), TypeName.OBJECT),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "IntObjectOrderedMap"), TypeName.OBJECT));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.INT.box(), TypeName.FLOAT.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "IntFloatOrderedMap")));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.INT.box(), TypeName.LONG.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "IntLongOrderedMap")));
+        maps.put(ParameterizedTypeName.get(mapClass, TypeName.INT.box(), TypeName.INT.box()),
+                ParameterizedTypeName.get(ClassName.get(toolsPackage, "IntIntOrderedMap")));
     }
     public String writeToString(TSVReader reader)
     {
@@ -99,29 +105,6 @@ public class CodeWriter
             Path p = file.toPath();//, outputDirectory = p;
             JavaFile jf = write(reader);
             jf.writeTo(p);
-//            if (!reader.packageName.isEmpty()) {
-//                for (String packageComponent : StringKit.split(reader.packageName, ".")) {
-//                    outputDirectory = outputDirectory.resolve(packageComponent);
-//                }
-//            }
-            if(toolsPackage == null) {
-                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(
-                        Files.createDirectories(p.resolve(jf.packageName.replace('.', '/'))).resolve("TabLabTools.java")), UTF_8)) {
-                    writer.write(
-                            new Scanner(Objects.requireNonNull(CodeWriter.class.getResourceAsStream("/TabLabTools.txt")), "UTF-8").useDelimiter("\\A").next()
-                    );
-                }
-            }
-            else if(toolsPackage.equalsIgnoreCase("--libGDX")) {
-                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(
-                    Files.createDirectories(p.resolve(jf.packageName.replace('.', '/'))).resolve("TabLabTools.java")), UTF_8)) {
-                    writer.write(
-                        new Scanner(Objects.requireNonNull(CodeWriter.class.getResourceAsStream("/TabLabToolsLibGDX.txt")), "UTF-8").useDelimiter("\\A").next()
-                    );
-                }
-            }
-//                                    .replaceFirst("###~~~###", Matcher.quoteReplacement(reader.packageName))
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -220,7 +203,21 @@ public class CodeWriter
                 typenameExtras2[i] = typenameExtra2 = typenames.getOrDefault(tmp, crossExtras[i]).box();
                 stringFields[i] = typenameExtra1.equals(STR);
                 stringExtras[i] = typenameExtra2.equals(STR);
-                typename = ParameterizedTypeName.get(mapClass, typenameExtra1, typenameExtra2);
+                TypeName alternate = ParameterizedTypeName.get(mapClass,
+                        (typenameExtra1.isBoxedPrimitive() ? typenameExtra1 : TypeName.OBJECT),
+                        (typenameExtra2.isBoxedPrimitive() ? typenameExtra2 : TypeName.OBJECT));
+                if(maps.containsKey(alternate)) {
+                    ParameterizedTypeName ptn = maps.get(alternate);
+                    ArrayList<TypeName> extras = new ArrayList<>(2);
+                    if(typenameExtra1.equals(TypeName.OBJECT))
+                        extras.add(typenameExtra1);
+                    if(typenameExtra2.equals(TypeName.OBJECT))
+                        extras.add(typenameExtra2);
+                    typename = ParameterizedTypeName.get(ptn.rawType, extras.toArray(new TypeName[0]));
+                }
+                else
+                    typename = ParameterizedTypeName.get(mapClass, typenameExtra1, typenameExtra2);
+
                 arraySeparators[i] = section.substring(mapStart+1, mapEnd);
             }
             typenameFields[i] = typename;
@@ -437,7 +434,7 @@ public class CodeWriter
      * @param value the value to escape as a String
      * @return the string literal representing {@code value}, including wrapping double quotes.
      */
-    private static String stringLiteral(String value, ClassName cross1) {
+    private String stringLiteral(String value, ClassName cross1) {
         StringBuilder result = new StringBuilder(value.length() + 2);
         if(!VOI.equals(cross1) && !STR.equals(cross1)) {
             result.append(cross1.simpleName()).append(".get(\"").append(value).append("\")");
@@ -469,7 +466,7 @@ public class CodeWriter
      * @param values the values to escape as a String
      * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
      */
-    private static String stringLiterals(String... values) {
+    private String stringLiterals(String... values) {
         StringBuilder result = new StringBuilder(values.length * 8);
         for (int s = 0; s < values.length;) {
             String value = values[s];
@@ -502,7 +499,7 @@ public class CodeWriter
      * @param values the values to escape as a String
      * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
      */
-    private static String stringLiterals(int alternationCode, String... values) {
+    private String stringLiterals(int alternationCode, String... values) {
         StringBuilder result = new StringBuilder(values.length * 8);
         for (int s = 0; s < values.length;) {
             if(alternationCode >= 2 || (s & 1) == alternationCode) {
@@ -544,7 +541,7 @@ public class CodeWriter
      * @param values the values to escape as a String
      * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
      */
-    private static String stringLiterals(int alternationCode, ClassName cross1, ClassName cross2, int lineLength, String... values) {
+    private String stringLiterals(int alternationCode, ClassName cross1, ClassName cross2, int lineLength, String... values) {
         StringBuilder result = new StringBuilder(values.length * 8),
                 work = new StringBuilder(40 + lineLength);
         int latestBreak = 0;
@@ -641,7 +638,7 @@ public class CodeWriter
         return result.toString();
     }
 
-    private static String stringMapArrayLiterals(int alternationCode, ClassName cross1, ClassName cross2, int lineLength,
+    private String stringMapArrayLiterals(int alternationCode, ClassName cross1, ClassName cross2, int lineLength,
                                           String content, String majorSeparator, String minorSeparator, TypeName valueType) {
         String[] values = StringKit.split(content, majorSeparator);
         StringBuilder result = new StringBuilder(values.length * 8),

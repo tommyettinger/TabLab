@@ -13,7 +13,6 @@ buildNumber.properties
 
 # Build and Release Folders
 build/
-target/
 out/
 *.class
 *.iml
