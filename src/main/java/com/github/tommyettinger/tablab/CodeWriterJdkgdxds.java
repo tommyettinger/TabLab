@@ -207,16 +207,15 @@ public class CodeWriterJdkgdxds
                         (typenameExtra2.isBoxedPrimitive() ? typenameExtra2 : TypeName.OBJECT));
                 if(maps.containsKey(alternate)) {
                     TypeName tn = maps.get(alternate);
-                    if(tn instanceof ParameterizedTypeName) {
-                        ArrayList<TypeName> extras = new ArrayList<>(2);
-                        if (!typenameExtra1.isBoxedPrimitive())
-                            extras.add(typenameExtra1);
-                        if (!typenameExtra2.isBoxedPrimitive())
-                            extras.add(typenameExtra2);
-                        typename = ((ParameterizedTypeName)tn).rawType;
+                    if (tn instanceof ParameterizedTypeName) {
+                        typename = ((ParameterizedTypeName) tn).rawType;
+//                        ArrayList<TypeName> extras = new ArrayList<>(2);
+//                        if (!typenameExtra1.isBoxedPrimitive())
+//                            extras.add(typenameExtra1);
+//                        if (!typenameExtra2.isBoxedPrimitive())
+//                            extras.add(typenameExtra2);
 //                        typename = ParameterizedTypeName.get(((ParameterizedTypeName)tn).rawType, extras.toArray(new TypeName[0]));
-                    }
-                    else typename = tn;
+                    } else typename = tn;
                 }
                 else
                     typename = ParameterizedTypeName.get(mapClass, typenameExtra1, typenameExtra2);

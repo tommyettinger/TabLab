@@ -19,6 +19,10 @@ public class TSVReaderTest {
             "Abjurer\tA defensive mage\t1\t9\tHaze;;Warding Tome\tHaze\tMist Shackles,1,Barricade,2,Stony Shield,3,Body of Iron,1\n" +
             "Brute\tA hulking bruiser\t10\t\tDestruction\tDestruction\t\n" +
             "Ninja\tA nimble assassin\t9\t1\tPoison;;Martial Arts\tMartial Arts\tVanish,2,Smoke Bomb,1,Shadow Dagger,2\n";
+    private final String jobsWithFloat = "name\tdescription\toffense:int\tdefense:int\ttalents:Talent[;;]\tfavorite:Talent\tskills:str{,}f\n" +
+            "Abjurer\tA defensive mage\t1\t9\tHaze;;Warding Tome\tHaze\tMist Shackles,1,Barricade,2.,Stony Shield,3.3,Body of Iron,.4\n" +
+            "Brute\tA hulking bruiser\t10\t\tDestruction\tDestruction\t\n" +
+            "Ninja\tA nimble assassin\t9\t1\tPoison;;Martial Arts\tMartial Arts\tVanish,2.0,Smoke Bomb,1.123,Shadow Dagger,2.01010101\n";
     private final String jobsMapArray =
             "name:str^\tdescription\toffense:int\tdefense:int\ttalents:Talent[;;]\tfavorite:Talent\tskills:str{,}int[/]\n" +
             "Abjurer\tA defensive mage\t1\t9\tHaze;;Warding Tome\tHaze\tMist Shackles,-1/3,Barricade,-3/5,Stony Shield,1/1,Body of Iron,0/2\n" +
@@ -57,7 +61,7 @@ public class TSVReaderTest {
         reader.read("Talent", talents);
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/resources/"));
-        reader.read("Job", jobs);
+        reader.read("Job", jobsWithFloat);
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/resources/"));
     }
