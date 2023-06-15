@@ -109,6 +109,10 @@ public class CodeWriterJdkgdxds
         }
     }
 
+    public TypeName extract(TypeName tn) {
+        return (tn instanceof ParameterizedTypeName) ? ((ParameterizedTypeName)tn).rawType : tn;
+    }
+
     public JavaFile write(TSVReader reader)
     {
         String packageName = "generated.tablab";
@@ -208,13 +212,13 @@ public class CodeWriterJdkgdxds
                 if(maps.containsKey(alternate)) {
                     TypeName tn = maps.get(alternate);
                     if (tn instanceof ParameterizedTypeName) {
-                        typename = ((ParameterizedTypeName) tn).rawType;
-//                        ArrayList<TypeName> extras = new ArrayList<>(2);
-//                        if (!typenameExtra1.isBoxedPrimitive())
-//                            extras.add(typenameExtra1);
-//                        if (!typenameExtra2.isBoxedPrimitive())
-//                            extras.add(typenameExtra2);
-//                        typename = ParameterizedTypeName.get(((ParameterizedTypeName)tn).rawType, extras.toArray(new TypeName[0]));
+//                        typename = ((ParameterizedTypeName) tn).rawType;
+                        ArrayList<TypeName> extras = new ArrayList<>(2);
+                        if (!typenameExtra1.isBoxedPrimitive())
+                            extras.add(typenameExtra1);
+                        if (!typenameExtra2.isBoxedPrimitive())
+                            extras.add(typenameExtra2);
+                        typename = ParameterizedTypeName.get(((ParameterizedTypeName)tn).rawType, extras.toArray(new TypeName[0]));
                     } else typename = tn;
                 }
                 else
@@ -255,32 +259,32 @@ public class CodeWriterJdkgdxds
                         if (!reader.contentLines[i][j].contains(arraySeparators[j]))
                         {
                             if(typenameExtras1[j].isBoxedPrimitive() && typenameExtras2[j].isBoxedPrimitive())
-                                cbb.add("$T.$L()", typenameFields[j], typenameExtras1[j], typenameExtras2[j], makeMethod);
+                                cbb.add("$T.$L()", extract(typenameFields[j]), typenameExtras1[j], typenameExtras2[j], makeMethod);
                             else if(typenameExtras1[j].isBoxedPrimitive())
-                                cbb.add("$T.<$T>$L()", typenameFields[j], typenameExtras2[j], makeMethod);
+                                cbb.add("$T.<$T>$L()", extract(typenameFields[j]), typenameExtras2[j], makeMethod);
                             else if(typenameExtras2[j].isBoxedPrimitive())
-                                cbb.add("$T.<$T>$L()", typenameFields[j], typenameExtras1[j], makeMethod);
+                                cbb.add("$T.<$T>$L()", extract(typenameFields[j]), typenameExtras1[j], makeMethod);
                             else
-                                cbb.add("$T.<$T, $T>$L()", typenameFields[j], typenameExtras1[j], typenameExtras2[j], makeMethod);
+                                cbb.add("$T.<$T, $T>$L()", extract(typenameFields[j]), typenameExtras1[j], typenameExtras2[j], makeMethod);
                         }
                         else
-                            cbb.add("$T.$L($L)", typenameFields[j], makeMethod,
+                            cbb.add("$T.$L($L)", extract(typenameFields[j]), makeMethod,
                                     stringMapArrayLiterals((stringFields[j] ? 0 : -1), crossFields[j], crossExtras[j], 80,
                                             reader.contentLines[i][j], arraySeparators[j], extraSeparators[j], typenameExtras2[j]));
                     } else if (arraySeparators[j] != null) {
                         if (typenameExtras1[j] != null) {
                             if (!reader.contentLines[i][j].contains(arraySeparators[j])) {
                                 if(typenameExtras1[j].isBoxedPrimitive() && typenameExtras2[j].isBoxedPrimitive())
-                                    cbb.add("$T.$L()", typenameFields[j], typenameExtras1[j], typenameExtras2[j], makeMethod);
+                                    cbb.add("$T.$L()", extract(typenameFields[j]), typenameExtras1[j], typenameExtras2[j], makeMethod);
                                 else if(typenameExtras1[j].isBoxedPrimitive())
-                                    cbb.add("$T.<$T>$L()", typenameFields[j], typenameExtras2[j], makeMethod);
+                                    cbb.add("$T.<$T>$L()", extract(typenameFields[j]), typenameExtras2[j], makeMethod);
                                 else if(typenameExtras2[j].isBoxedPrimitive())
-                                    cbb.add("$T.<$T>$L()", typenameFields[j], typenameExtras1[j], makeMethod);
+                                    cbb.add("$T.<$T>$L()", extract(typenameFields[j]), typenameExtras1[j], makeMethod);
                                 else
-                                    cbb.add("$T.<$T, $T>$L()", typenameFields[j], typenameExtras1[j], typenameExtras2[j], makeMethod);
+                                    cbb.add("$T.<$T, $T>$L()", extract(typenameFields[j]), typenameExtras1[j], typenameExtras2[j], makeMethod);
 
                             } else
-                                cbb.add("$T.$L($L)", typenameFields[j], makeMethod,
+                                cbb.add("$T.$L($L)", extract(typenameFields[j]), makeMethod,
                                         stringLiterals((stringFields[j] ? 1 : 0) + (stringExtras[j] ? 2 : 0) - 1, crossFields[j], crossExtras[j], 80,
                                                 StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
                         } else {
