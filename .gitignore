@@ -25,11 +25,14 @@ out/
 .gradle/
 
 # Generated code
-**/test/java/generated/**
+**/generated/tablab/**
 
-# jEdit garbage
+## OS-Specific:
+.DS_Store
+Thumbs.db
+
+## Miscellaneous:
 *~
+*.*#
 *#*#
-*#*.*#
-*.jar
 *.zip
