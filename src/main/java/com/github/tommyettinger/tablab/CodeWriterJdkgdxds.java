@@ -297,9 +297,7 @@ public class CodeWriterJdkgdxds
                     } else {
                         cbb.add("$L", reader.contentLines[i][j].isEmpty()
                                 ? Objects.toString(defaults.get(typenameFields[j]))
-                                : TypeName.CHAR.equals(typenameFields[j])
-                                ? "'" + reader.contentLines[i][j] + "'"
-                                : reader.contentLines[i][j]);
+                                : bareLiteral(reader.contentLines[i][j], typenameFields[j]));
                     }
 //                    if (j < fieldCount - 1)
                     cbb.add(", ");
@@ -329,6 +327,18 @@ public class CodeWriterJdkgdxds
         }
         return JavaFile.builder(packageName, tb.build()).skipJavaLangImports(true).build();
     }
+
+    private String bareLiteral(String s, TypeName type) {
+        if(TypeName.CHAR.equals(type))
+            return "'" + s + "'";
+        if(TypeName.LONG.equals(type))
+            return s + "L";
+        if(TypeName.FLOAT.equals(type))
+            return s + "f";
+        return s;
+
+    }
+
     /**
      * Big constant 0.
      */
@@ -487,7 +497,7 @@ public class CodeWriterJdkgdxds
      * Returns the string literals, separated by ", " representing {@code values}, including wrapping double quotes.
      * From CodePoet source (com.squareup.javapoet.Util), with small changes.
      * @param values the values to escape as a String
-     * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
+     * @return the string literals representing {@code values}, including wrapping double quotes and comma separators.
      */
     private String stringLiterals(String... values) {
         StringBuilder result = new StringBuilder(values.length * 8);
@@ -520,7 +530,7 @@ public class CodeWriterJdkgdxds
      * Returns the string literals, separated by ", " representing {@code values}, including wrapping double quotes.
      * From CodePoet source (com.squareup.javapoet.Util), with small changes.
      * @param values the values to escape as a String
-     * @return the string literal representing {@code value}, including wrapping double quotes and comma separators.
+     * @return the string literals representing {@code values}, including wrapping double quotes and comma separators.
      */
     private String stringLiterals(int alternationCode, String... values) {
         StringBuilder result = new StringBuilder(values.length * 8);
