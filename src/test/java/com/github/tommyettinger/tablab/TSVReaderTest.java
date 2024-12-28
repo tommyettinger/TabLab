@@ -64,6 +64,10 @@ public class TSVReaderTest {
         reader.read("Job", jobsWithFloat);
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/resources/"));
+        reader.readFile("src/test/resources/Signals.tsv");
+        System.out.println(writer.write(reader));
+        writer.writeTo(reader, new File("src/test/resources/"));
+
     }
 
     @Test

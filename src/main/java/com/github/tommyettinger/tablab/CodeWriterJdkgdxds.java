@@ -308,7 +308,7 @@ public class CodeWriterJdkgdxds
                                             80, StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
                         }
                     } else if (junctionFields[j] || junctionExtras[j]) {
-                        cbb.add("$T.parse($L)", JUNC, stringLiteral(reader.contentLines[i][j], crossFields[j]));
+                        cbb.add("$T.parse($L)", JUNC.rawType, stringLiteral(reader.contentLines[i][j], crossFields[j]));
                     } else if (stringFields[j] || stringExtras[j] || !VOI.equals(crossFields[j])) {
                         cbb.add("$L", stringLiteral(reader.contentLines[i][j], crossFields[j]));
                     } else {

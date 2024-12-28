@@ -1,0 +1,4 @@
+name	kind	listens:j	emits:s[, ]
+Dodge	defense	hit	!hit, miss
+Parry	defense	(hit&melee)	!hit, miss, block
+Weight	offense	(miss&block)	!miss, hit
