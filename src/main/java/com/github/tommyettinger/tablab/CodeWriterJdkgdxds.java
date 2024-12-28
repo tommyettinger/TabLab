@@ -18,7 +18,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class CodeWriterJdkgdxds
 {
-    public String toolsPackage = "com.github.tommyettinger.ds", toolsClass = "ObjectObjectOrderedMap", makeMethod = "with";
+    public String toolsPackage = "com.github.tommyettinger.ds";
+    public String toolsClass = "ObjectObjectOrderedMap";
+    public String makeMethod = "with";
     public ClassName mapClass = ClassName.get(toolsPackage, toolsClass);
     public CodeWriterJdkgdxds()
     {
@@ -30,6 +32,7 @@ public class CodeWriterJdkgdxds
 
     private final Modifier[] mods = {Modifier.PUBLIC};
     private final TypeName STR = TypeName.get(String.class);
+    private final ParameterizedTypeName JUNC = ParameterizedTypeName.get(ClassName.get(toolsPackage, "Junction"), STR);
     private final ClassName VOI = ClassName.get(Void.class);
     public final HashMap<String, TypeName> typenames = new HashMap<>(32);
     public final HashMap<TypeName, TypeName> maps = new HashMap<>(32);
@@ -52,6 +55,8 @@ public class CodeWriterJdkgdxds
         typenames.put("f", TypeName.FLOAT);
         typenames.put("double", TypeName.DOUBLE);
         typenames.put("d", TypeName.DOUBLE);
+        typenames.put("Junction", JUNC);
+        typenames.put("j", JUNC);
         typenames.put("Object", TypeName.OBJECT);
         typenames.put("object", TypeName.OBJECT);
         typenames.put("o", TypeName.OBJECT);
@@ -134,6 +139,8 @@ public class CodeWriterJdkgdxds
         TypeName[] typenameExtras2 = new TypeName[fieldCount];
         boolean[] stringFields = new boolean[fieldCount];
         boolean[] stringExtras = new boolean[fieldCount];
+        boolean[] junctionFields = new boolean[fieldCount];
+        boolean[] junctionExtras = new boolean[fieldCount];
         ClassName[] crossFields = new ClassName[fieldCount];
         ClassName[] crossExtras = new ClassName[fieldCount];
         String[] arraySeparators = new String[fieldCount];
@@ -162,6 +169,8 @@ public class CodeWriterJdkgdxds
                     typename = colon < 0 ? STR : typenames.getOrDefault(tmp, crossFields[i]);
                     if(stringFields[i] = typename.equals(STR))
                         reader.keyColumn = colon < 0 ? section : section.substring(0, colon);
+                    junctionFields[i] = typename.equals(JUNC);
+
                 } else {
                     if (colon < 0)
                     {
@@ -176,6 +185,7 @@ public class CodeWriterJdkgdxds
                         typename = typenames.getOrDefault(tmp, crossFields[i]);
                         if(stringFields[i] = typename.equals(STR))
                             reader.keyColumn = section.substring(0, colon);
+                        junctionFields[i] = typename.equals(JUNC);
                     }
                 }
             }
@@ -186,6 +196,8 @@ public class CodeWriterJdkgdxds
                 typenameExtra2 = typenames.getOrDefault(tmp, crossExtras[i]);
                 stringFields[i] = typenameExtra1.equals(STR);
                 stringExtras[i] = typenameExtra2.equals(STR);
+                junctionFields[i] = typenameExtra1.equals(JUNC);
+                junctionExtras[i] = typenameExtra2.equals(JUNC);
                 typenameExtras2[i] = typenameExtra2 = ArrayTypeName.of(typenameExtra2);
                 typename = ParameterizedTypeName.get(mapClass, typenameExtra1, typenameExtra2);
                 arraySeparators[i] = section.substring(mapStart+1, mapEnd);
@@ -196,6 +208,7 @@ public class CodeWriterJdkgdxds
                 crossFields[i] = typenames.containsKey(tmp = section.substring(colon + 1, arrayStart)) ? VOI : ClassName.get(packageName, tmp);
                 typename = typenames.getOrDefault(tmp, crossFields[i]);
                 stringFields[i] = typename.equals(STR);
+                junctionFields[i] = typename.equals(JUNC);
                 typename = ArrayTypeName.of(typename);
                 arraySeparators[i] = section.substring(arrayStart+1, section.indexOf(']'));
             }
@@ -206,6 +219,8 @@ public class CodeWriterJdkgdxds
                 typenameExtras2[i] = typenameExtra2 = typenames.getOrDefault(tmp, crossExtras[i]).box();
                 stringFields[i] = typenameExtra1.equals(STR);
                 stringExtras[i] = typenameExtra2.equals(STR);
+                junctionFields[i] = typenameExtra1.equals(JUNC);
+                junctionExtras[i] = typenameExtra2.equals(JUNC);
                 TypeName alternate = ParameterizedTypeName.get(mapClass,
                         (typenameExtra1.isBoxedPrimitive() ? typenameExtra1 : TypeName.OBJECT),
                         (typenameExtra2.isBoxedPrimitive() ? typenameExtra2 : TypeName.OBJECT));
@@ -292,6 +307,8 @@ public class CodeWriterJdkgdxds
                                     stringLiterals((stringFields[j] ? 2 : -1), crossFields[j], null,
                                             80, StringKit.split(reader.contentLines[i][j], arraySeparators[j])));
                         }
+                    } else if (junctionFields[j] || junctionExtras[j]) {
+                        cbb.add("$T.parse($L)", JUNC, stringLiteral(reader.contentLines[i][j], crossFields[j]));
                     } else if (stringFields[j] || stringExtras[j] || !VOI.equals(crossFields[j])) {
                         cbb.add("$L", stringLiteral(reader.contentLines[i][j], crossFields[j]));
                     } else {
