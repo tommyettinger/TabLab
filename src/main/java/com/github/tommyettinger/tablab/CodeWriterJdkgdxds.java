@@ -245,7 +245,7 @@ public class CodeWriterJdkgdxds
             field = StringKit.safeSubstring(section, 0, colon);
             tb.addField(typename, field, mods);
             fieldNames[i] = field;
-            if(field.equals(reader.keyColumn) && typename.equals(STR)) {
+            if(field.equals(reader.keyColumn) && typename.equals(STR) && mappingKeyIndex < 0) {
                 if (typeLen < 0) {
                     mappingTypename = ParameterizedTypeName.get(mapClass, STR, myName);
                     mappingKeyIndex = i;

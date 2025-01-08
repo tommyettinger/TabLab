@@ -55,6 +55,8 @@ public class CodeWriter
         typenames.put("String", STR);
         typenames.put("str", STR);
         typenames.put("s", STR);
+        typenames.put("Junction", STR); // Junction cannot be parsed if the class(es) aren't present. Treat as String.
+        typenames.put("j", STR);
         typenames.put("", STR);
         typenames.put("bool", TypeName.BOOLEAN);
         typenames.put("boolean", TypeName.BOOLEAN);
@@ -227,7 +229,7 @@ public class CodeWriter
             field = StringKit.safeSubstring(section, 0, colon);
             tb.addField(typename, field, mods);
             fieldNames[i] = field;
-            if(field.equals(reader.keyColumn) && typename.equals(STR)) {
+            if(field.equals(reader.keyColumn) && typename.equals(STR) && mapKeyIndex < 0) {
                 if (typeLen < 0) {
                     mapTypename = ParameterizedTypeName.get(mapClass, STR, myName);
                     mapKeyIndex = i;

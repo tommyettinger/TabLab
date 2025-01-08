@@ -52,6 +52,9 @@ public class TSVReaderTest {
         reader.read("Job", jobs);
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/resources/"));
+        reader.readFile("src/test/resources/Signal.tsv");
+        System.out.println(writer.write(reader));
+        writer.writeTo(reader, new File("src/test/resources/"));
     }
     @Test
     public void testWriterJdkgdxds()
@@ -64,7 +67,7 @@ public class TSVReaderTest {
         reader.read("Job", jobsWithFloat);
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/resources/"));
-        reader.readFile("src/test/resources/Signals.tsv");
+        reader.readFile("src/test/resources/Signal.tsv");
         System.out.println(writer.write(reader));
         writer.writeTo(reader, new File("src/test/resources/"));
 
