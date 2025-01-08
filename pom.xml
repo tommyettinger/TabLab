@@ -6,7 +6,7 @@
 
     <groupId>com.github.tommyettinger</groupId>
     <artifactId>tablab</artifactId>
-    <version>0.4.0</version>
+    <version>0.5.0-SNAPSHOT</version>
     <modules>
     </modules>
 
@@ -52,10 +52,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.version>3.8.1</maven.compiler.version>
-        <maven.javadoc.version>3.2.0</maven.javadoc.version>
+        <maven.compiler.version>3.13.0</maven.compiler.version>
+        <maven.javadoc.version>3.11.2</maven.javadoc.version>
         <maven.resources.version>3.2.0</maven.resources.version>
-        <maven.source.version>3.2.1</maven.source.version>
+        <maven.source.version>3.3.1</maven.source.version>
         <maven.gpg.version>1.6</maven.gpg.version>
         <jdk.version>11</jdk.version>
         <junit.version>4.13.2</junit.version>
@@ -84,7 +84,7 @@
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-shade-plugin</artifactId>
-            <version>3.3.0</version>
+            <version>3.6.0</version>
             <type>maven-plugin</type>
         </dependency>
     </dependencies>
@@ -174,8 +174,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.version}</version>
                 <configuration>
-                    <source>9</source>
-                    <target>9</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -262,7 +262,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.6.0</version>
                 <executions>
                     <!-- Run shade goal on package phase -->
                     <execution>
