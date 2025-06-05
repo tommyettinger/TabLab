@@ -7,9 +7,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Created by Tommy Ettinger on 9/23/2017.
@@ -24,9 +21,8 @@ public class TSVReader {
     }
     public void read(String filename, String text)
     {
-        read(filename, Pattern.compile("\\V+").matcher(text).results().map(MatchResult::group).collect(Collectors.toList()));
-// An alternative would use RegExodus: Pattern.compile("\\V+").matcher(text).foundStrings()
-    }
+        read(filename, Arrays.asList(text.split("\\v+")));
+   }
     public void read(String filename, List<String> allLines)
     {
         //allLines = text.split("\r\n|[\n-\r\u0085\u2028\u2029]");
@@ -36,20 +32,6 @@ public class TSVReader {
             allLines.remove(allLines.size() - 1);
         int idx;
         keyColumn = null;
-//        line = allLines.get(0);
-//        int idx = line.lastIndexOf('.');
-//        packageName = StringKit.safeSubstring(line, 0, idx);
-//        name = StringKit.safeSubstring(line, idx+1, idx = StringKit.indexOf(line, StringKit.whitespacePattern));
-//        if(idx < 0)
-//            keyColumn = "void";
-//        else
-//        {
-//            keyColumn = StringKit.safeSubstring(line,
-//                    idx = StringKit.indexOf(line, StringKit.nonSpacePattern, idx),
-//                    StringKit.indexOf(line, StringKit.whitespacePattern, idx));
-//            if("void".equalsIgnoreCase(keyColumn))
-//                keyColumn = "";
-//        }
         if(filename == null)
             name = "Untitled";
         else if((idx = filename.indexOf('.')) >= 0)
@@ -57,8 +39,6 @@ public class TSVReader {
         else
             name = filename;
         headerLine = StringKit.split(allLines.get(0), "\t");
-        //if("void".equals(keyColumn))
-        //    keyColumn = headerLine[0];
         contentLines = new String[allLines.size() - 1][headerLine.length];
         String temp;
         for (int i = 0; i < contentLines.length; i++) {
@@ -73,10 +53,6 @@ public class TSVReader {
                 else
                 {
                     contentLines[i][j] = StringKit.safeSubstring(temp, idx+1, idx = temp.indexOf('\t', idx+1));
-//                    if(temp.charAt(idx - 1) == '^')
-//                        keyColumn = (contentLines[i][j] = StringKit.safeSubstring(contentLines[i][j], 0, contentLines[i][j].length() - 1));
-//                    else if(keyColumn == null)
-//                        keyColumn = contentLines[i][j];
                 }
             }
             if("".equals(headerLine[headerLine.length - 1]))
@@ -84,10 +60,6 @@ public class TSVReader {
             else
             {
                 contentLines[i][headerLine.length-1] = temp.substring(idx+1);
-//                if(temp.charAt(idx - 1) == '^')
-//                    keyColumn = (contentLines[i][headerLine.length-1] = StringKit.safeSubstring(contentLines[i][headerLine.length-1], 0, contentLines[i][headerLine.length-1].length() - 1));
-//                else if(keyColumn == null)
-//                    keyColumn = contentLines[i][headerLine.length-1];
             }
         }
     }
@@ -101,6 +73,14 @@ public class TSVReader {
             System.err.println("Could not read file (check that path is correct): " + filename);
         }
     }
+    private static boolean stringArrayEquals(String[] left, String[] right) {
+        if (left == right) return true;
+        if (left == null || right == null) return false;
+        final int len = left.length;
+        if(len != right.length) return false;
+        for (int i = 0; i < len; i++) { if(!java.util.Objects.equals(left[i], right[i])) return false; }
+        return true;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -109,8 +89,7 @@ public class TSVReader {
 
         TSVReader tsvReader = (TSVReader) o;
 
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
-        if (!Arrays.equals(headerLine, tsvReader.headerLine)) return false;
+        if (!stringArrayEquals(headerLine, tsvReader.headerLine)) return false;
         if (!Arrays.deepEquals(contentLines, tsvReader.contentLines)) return false;
         if (!Objects.equals(name, tsvReader.name)) return false;
         return Objects.equals(keyColumn, tsvReader.keyColumn);

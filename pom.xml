@@ -10,7 +10,6 @@
     <modules>
     </modules>
 
-
     <name>TabLab</name>
 
     <description>Generate Java source from tab-separated value files</description>
