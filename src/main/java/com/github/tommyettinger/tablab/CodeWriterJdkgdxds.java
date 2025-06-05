@@ -5,13 +5,8 @@ import com.squareup.javapoet.*;
 import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Created by Tommy Ettinger on 9/23/2017.
@@ -413,18 +408,18 @@ public class CodeWriterJdkgdxds
     }
     private void makeEquals(TypeSpec.Builder tb, ClassName cn, String[] fieldNames, TypeName[] fieldTypes)
     {
+        TypeName tn, arrays = TypeName.get(Arrays.class), objects = TypeName.get(Objects.class);
         tb.addMethod(MethodSpec.methodBuilder("stringArrayEquals").addModifiers(Modifier.PRIVATE, Modifier.STATIC).returns(TypeName.BOOLEAN).addParameter(ArrayTypeName.of(STR), "left").addParameter(ArrayTypeName.of(STR), "right")
                 .addCode("if (left == right) return true;\n" +
                         "if (left == null || right == null) return false;\n" +
                         "final int len = left.length;\n" +
                         "if(len != right.length) return false;\n" +
-                        "for (int i = 0; i < len; i++) { if(!java.util.Objects.equals(left[i], right[i])) return false; }\n" +
-                        "return true;\n").build());
+                        "for (int i = 0; i < len; i++) { if(!$T.equals(left[i], right[i])) return false; }\n" +
+                        "return true;\n", objects).build());
 
         MethodSpec.Builder mb = MethodSpec.methodBuilder("equals").addModifiers(Modifier.PUBLIC).returns(TypeName.BOOLEAN).addParameter(TypeName.OBJECT, "o");
         mb.addCode("if (this == o) return true;\nif (o == null || getClass() != o.getClass()) return false;\n$T other = ($T) o;\n", cn, cn);
         int len = Math.min(fieldNames.length, fieldTypes.length);
-        TypeName tn, arrays = TypeName.get(Arrays.class);
         String fn;
         for (int i = 0; i < len; i++) {
             fn = fieldNames[i];
@@ -434,10 +429,6 @@ public class CodeWriterJdkgdxds
             {
                 mb.addStatement("if ($N != other.$N) return false", fn, fn);
             }
-//            else if(tn.equals(STR))
-//            {
-//                mb.addStatement("if ($N != null ? !$N.equals(other.$N) : other.$N != null) return false", fn, fn, fn, fn);
-//            }
             else if(tn instanceof ArrayTypeName)
             {
                 tn = ((ArrayTypeName)tn).componentType;
@@ -455,7 +446,7 @@ public class CodeWriterJdkgdxds
             }
             else
             {
-                mb.addStatement("if ($N != null ? !$N.equals(other.$N) : other.$N != null) return false", fn, fn, fn, fn);
+                mb.addStatement("if (!$T.equals($N, other.$N)) return false", objects, fn, fn);
             }
         }
         mb.addStatement("return true");

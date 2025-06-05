@@ -27,7 +27,7 @@ name(s) of the input file(s) to process, and optionally one of these case-insens
 
  - `--libGDX` will generate code that uses [libGDX](https://libgdx.com) collections instead of JDK ones.
  - `--SquidLib` will generate code that uses [SquidLib](https://github.com/yellowstonegames/SquidLib) collections instead of JDK ones.
- - `--jdkgdxds` will generate code that uses [jdkgdxds](https://github.com/tommyettinger/jdkgdxds) collections instead of JDK ones.
+ - `--jdkgdxds` will generate code that uses [jdkgdxds](https://github.com/tommyettinger/jdkgdxds) collections instead of JDK ones (recommended).
 
 The .bat files allow dragging-and-dropping one or more input files
 onto the .bat file, which will process all of them and wait for a key press at the end. Within the input file, the
@@ -118,10 +118,10 @@ Ninja	A nimble assassin	9	1	Poison;;Martial Arts	Vanish,2,Smoke Bomb,1,Shadow Da
 This makes the name (and so the key) `Ninja`, the description `A nimble assassin`, the offense value `9`, the defense
 value `1`, the Talents array reference two talents called `Poison` and `Martial Arts`, and the skills map consisting
 of `Vanish` mapped to `2`, `Smoke Bomb` mapped to `1`, and `Shadow Dagger` mapped to `2`. The Talent objects will be
-looked up in a class in the same package (by default, `generated`), calling `Talent.get("Poison")` to get the first
-Talent instance and `Talent.get("Martial Arts")` to get the other. If you have your own non-TabLab class that you want
-to use like Talent is used here, you just need it to have a static method `get()` that takes a String and returns an
-appropriate instance of that class.
+looked up in a class in the same package (by default, `generated.tablab`), calling `Talent.get("Poison")` to get the
+first Talent instance and `Talent.get("Martial Arts")` to get the other. If you have your own non-TabLab class that you
+want to use like Talent is used here, you just need it to have a static method `get()` that takes a String and returns
+an appropriate instance of that class.
 
 ## Generated Code
 
