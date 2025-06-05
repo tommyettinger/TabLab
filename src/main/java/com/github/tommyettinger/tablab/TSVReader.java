@@ -39,29 +39,33 @@ public class TSVReader {
         else
             name = filename;
         headerLine = StringKit.split(allLines.get(0), "\t");
-        contentLines = new String[allLines.size() - 1][headerLine.length];
-        String temp;
+        contentLines = new String[allLines.size() - 1][];
         for (int i = 0; i < contentLines.length; i++) {
-            temp = allLines.get(i+1);
-            idx = -1;
-            for (int j = 0; j < headerLine.length - 1; j++) {
-                if("".equals(headerLine[j]))
-                {
-                    contentLines[i][j] = "";
-                    idx = temp.indexOf('\t', idx+1);
-                }
-                else
-                {
-                    contentLines[i][j] = StringKit.safeSubstring(temp, idx+1, idx = temp.indexOf('\t', idx+1));
-                }
+            contentLines[i] = readLine(allLines.get(i+1));
+        }
+    }
+
+    public String[] readLine(String temp) {
+        int idx = -1;
+        String[] result = new String[headerLine.length];
+        for (int j = 0; j < headerLine.length - 1; j++) {
+            if("".equals(headerLine[j]))
+            {
+                result[j] = "";
+                idx = temp.indexOf('\t', idx+1);
             }
-            if("".equals(headerLine[headerLine.length - 1]))
-                contentLines[i][headerLine.length - 1] = "";
             else
             {
-                contentLines[i][headerLine.length-1] = temp.substring(idx+1);
+                result[j] = StringKit.safeSubstring(temp, idx+1, idx = temp.indexOf('\t', idx+1));
             }
         }
+        if("".equals(headerLine[headerLine.length - 1]))
+            result[headerLine.length - 1] = "";
+        else
+        {
+            result[headerLine.length-1] = temp.substring(idx+1);
+        }
+        return result;
     }
 
     public void readFile(String filename)
