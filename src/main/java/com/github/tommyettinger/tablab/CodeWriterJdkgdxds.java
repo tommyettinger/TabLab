@@ -315,7 +315,7 @@ public class CodeWriterJdkgdxds
                     cbb.add(", ");
                 }
 
-                cbb.add("$LL", hash64(reader.contentLines[i]));
+                cbb.add("$LL", hash64(forward(reader.name.hashCode()), reader.contentLines[i]));
                 
                 cbb.add("),\n");
                 
@@ -350,56 +350,118 @@ public class CodeWriterJdkgdxds
         return s;
 
     }
+    /**
+     * A long constant used as a multiplier by the MX3 unary hash.
+     * Used in {@link #mix(long)} and {@link #mixStream(long, long)}, as well as when hashing one Object.
+     */
+    public static final long C = 0xBEA225F9EB34556DL;
+    /**
+     * A 64-bit probable prime, found with {@link java.math.BigInteger#probablePrime(int, Random)}.
+     */
+    public static final long Q = 0xD1B92B09B92266DDL;
+    /**
+     * A 64-bit probable prime, found with {@link java.math.BigInteger#probablePrime(int, Random)}.
+     */
+    public static final long R = 0x9995988B72E0D285L;
+    /**
+     * A 64-bit probable prime, found with {@link java.math.BigInteger#probablePrime(int, Random)}.
+     */
+    public static final long S = 0x8FADF5E286E31587L;
+    /**
+     * A 64-bit probable prime, found with {@link java.math.BigInteger#probablePrime(int, Random)}.
+     */
+    public static final long T = 0xFCF8B405D3D0783BL;
 
     /**
-     * Big constant 0.
+     * A medium-quality, but fast, way to scramble a 64-bit input and get a 64-bit output.
+     * <br>
+     * This is reversible, which allows all outputs to be possible for the hashing functions to produce.
+     * However, this also allows the seed to be recovered if a zero-length input is supplied. That's why this
+     * is a non-cryptographic hashing algorithm!
+     * @param x any long
+     * @return any long
      */
-    public static final long b0 = 0xA0761D6478BD642FL;
-    /**
-     * Big constant 1.
-     */
-    public static final long b1 = 0xE7037ED1A0B428DBL;
-    /**
-     * Big constant 2.
-     */
-    public static final long b2 = 0x8EBC6AF09C88C6E3L;
-    /**
-     * Big constant 3.
-     */
-    public static final long b3 = 0x589965CC75374CC3L;
-    /**
-     * Big constant 4.
-     */
-    public static final long b4 = 0x1D8E4E27C47D124FL;
-    /**
-     * Big constant 5.
-     */
-    public static final long b5 = 0xEB44ACCAB455D165L;
-
-    public static long mum(final long a, final long b) {
-        final long n = a * b;
-        return n - (n >>> 32);
+    public static long mix(long x) {
+        x ^= (x << 23 | x >>> 41) ^ (x << 43 | x >>> 21);
+        x *= C;
+        return x ^ (x << 11 | x >>> 53) ^ (x << 50 | x >>> 14);
     }
 
-    public static long hash64(final String[] data) {
-        if (data == null) return 0;
-        long seed = 9069147967908697017L;
-        final int len = data.length;
-        for (int i = 3; i < len; i+=4) {
-            seed = mum(
-                    mum(data[i-3].hashCode() ^ b1, data[i-2].hashCode() ^ b2) + seed,
-                    mum(data[i-1].hashCode() ^ b3, data[i  ].hashCode() ^ b4));
-        }
-        int t;
-        switch (len & 3) {
-            case 0: seed = mum(b1 ^ seed, b4 + seed); break;
-            case 1: seed = mum(seed ^ ((t = data[len-1].hashCode()) >>> 16), b3 ^ (t & 0xFFFFL)); break;
-            case 2: seed = mum(seed ^ data[len-2].hashCode(), b0 ^ data[len-1].hashCode()); break;
-            case 3: seed = mum(seed ^ data[len-3].hashCode(), b2 ^ data[len-2].hashCode()) ^ mum(seed ^ data[len-1].hashCode(), b4); break;
-        }
-        seed = (seed ^ seed << 16) * (len ^ b0);
-        return seed - (seed >>> 31) + (seed << 33);
+    /**
+     * A low-to-medium-quality and fast way to combine two 64-bit inputs to get one 64-bit result.
+     * <br>
+     * This is not reversible unless you know one of the parameters in full.
+     * @param h any long, typically a counter; will be scrambled much less
+     * @param x any long, typically an item being hashed; will be scrambled much more
+     * @return any long
+     */
+    public static long mixStream(long h, long x) {
+        x *= C;
+        x ^= x >>> 39;
+        return (x * C + h) * C;
     }
+
+    /**
+     * Performs part of the hashing step applied to four 64-bit inputs at once, and typically added to a running
+     * hash value directly.
+     * <br>
+     * This is not reversible under normal circumstances. It may be possible to recover one parameter if the other three
+     * are known in full. This uses four 64-bit primes as multipliers; the exact numbers don't matter as long as
+     * they are odd and have sufficiently well-distributed bits (close to 32 '1' bits, and so on). If this is only
+     * added to a running total, the result won't have very random low-order bits, so performing bitwise rotations
+     * after at least some calls to this (or xorshifting right) is critical to keeping the hash high-quality.
+     * @param a any long, typically an item being hashed; mixed with b and d
+     * @param b any long, typically an item being hashed; mixed with c and a
+     * @param c any long, typically an item being hashed; mixed with d and b
+     * @param d any long, typically an item being hashed; mixed with a and c
+     * @return any long
+     */
+    public static long mixStreamBulk(long a, long b, long c, long d) {
+        return ((a << 28 | a >>> 36) + b) * Q
+                + ((b << 29 | b >>> 35) + c) * R
+                + ((c << 27 | c >>> 37) + d) * S
+                + ((d << 25 | d >>> 39) + a) * T;
+    }
+
+
+    /**
+     * A very minimalist way to scramble inputs to be used as seeds.
+     * This simply performs the XOR-rotate-XOR-rotate operation on x, using left rotations of 29 and 47.
+     * @param x any long
+     * @return a slightly scrambled version of x
+     */
+    public static long forward(long x) {
+        return x ^ (x << 29 | x >>> 35) ^ (x << 47 | x >>> 17);
+    }
+
+    /**
+     * A hashing function that takes any {@code long} as a seed and a CharSequence to hash, modified using the seed.
+     * This produces a high-quality 64-bit hash.
+     * @param seed any long seed
+     * @param data input String
+     * @return the 64-bit hash of data
+     */
+    public static long hash64(final long seed, final String[] data) {
+        if (data == null)
+            return 0;
+        int len = data.length;
+        long h = len ^ seed;
+        int i = 0;
+        while(len >= 8){
+            len -= 8;
+            h *= C;
+            h += mixStreamBulk(data[i  ].hashCode(), data[i+1].hashCode(), data[i+2].hashCode(), data[i+3].hashCode());
+            h = (h << 37 | h >>> 27);
+            h += mixStreamBulk(data[i+4].hashCode(), data[i+5].hashCode(), data[i+6].hashCode(), data[i+7].hashCode());
+            i += 8;
+        }
+        while(len >= 1){
+            len--;
+            h = mixStream(h, data[i++].hashCode());
+        }
+        return mix(h);
+    }
+
 
     private void makeHashCode(TypeSpec.Builder tb)
     {
