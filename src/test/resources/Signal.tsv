@@ -1,4 +1,28 @@
-name	kind	listens:j	emits:s[, ]
-Dodge	defense	hit	!hit, miss
-Parry	defense	(hit&melee)	!hit, miss, block
-Weight	offense	(miss&block)	!miss, hit
+name:s^	operation:s	value_mul:i	value_add:j{, }i	type:s	listens_for:j	succ_remove:s[, ]	succ_put:s[, ]	removed_by:j	description:s
+bleed	dot	25	heavy, -15	biological				heal	Deals VALUE biological DOT at the end of every round. Removed by any healing. Against heavy armor, -15 VALUE.
+burn	damage	25	light|heavy, 15, plant, 25	energy					Deals VALUE energy damage. Against any armor, +15 VALUE. Against plant, +25 VALUE
+cleanse	aid	5		biological		venom, curse, wither	heal, medicine		Heals VALUE. Delivers 'medicine'. Removes 'venom', 'curse', 'wither'.
+curse	iot	3		spiritual			unhand		VALUE% chance at the end of every round to inflict 'unhand' status.
+deflect	defense	10		physical	ranged		miss, block		VALUE% of ranged attacks against the user miss by blocking.
+disarm	inflict	9		physical	~miss		unhand		VALUE% of attacks that hit inflict 'unhand' status.
+disease	iot	4		biological			stun	medicine	VALUE% chance at the end of every round to inflict 'stun' status. Removed by 'medicine'.
+feint	inflict	18		mental	miss		stun		VALUE% of attacks made that missed inflict 'stun' status.
+freeze	damage	50	unarmored, 30, light|heavy, -30	energy					Deals VALUE energy damage. Against unarmored, +30 VALUE. Against any armor, -30 VALUE.
+hack	damage	35	light, 15	physical					Deals VALUE physical damage. Against light armor, +15 VALUE.
+lash	damage	40	unarmored, 30, light|heavy, -15	physical					Deals VALUE physical damage. Against unarmored, +30 VALUE. Against any armor, -15 VALUE.
+nurse	aid	25		biological		venom	heal, medicine		Heals VALUE. Delivers 'medicine'. Removes 'venom'.
+parry	defense	10		physical	melee		miss, block		VALUE% of melee attacks against the user miss by blocking.
+penetrate	inflict	7	heavy, 6	physical	~miss		breach		VALUE% of attacks that hit inflict 'breach' status. Against heavy armor, +6 VALUE.
+pierce	damage	35	unarmored, 15	physical					Deals VALUE physical damage. Against unarmored, +15 VALUE.
+poison	dot	15		biological				medicine	Deals VALUE biological DOT at the end of every round. Removed by 'medicine'.
+precision	offense	15		physical	miss	miss			VALUE% of attacks made that missed instead hit.
+punish	damage	10	undead|fiend, 75	energy					Deals VALUE energy damage. Against undead or fiend, +75 VALUE.
+reach	offense	30		physical	melee&counter		miss		VALUE% of melee counterattacks against the user miss.
+shock	damage	20	heavy, 45, machine, 25	energy					Deals VALUE energy damage. Against heavy armor, +45 VALUE. Against machine, +25 VALUE.
+slam	damage	20	light|heavy, 30	physical					Deals VALUE physical damage. Against any armor, +30 VALUE.
+slash	damage	40	unarmored, 15, heavy, -15	physical					Deals VALUE physical damage. Against unarmored, +15 VALUE. Against heavy armor, -15 VALUE.
+slay	damage	65	undead|machine, -65, plant, 5	energy					Deals VALUE energy damage. Against plant, +5 VALUE. Against undead or fiend, -65 VALUE.
+trip	inflict	9		physical	~miss		floored		VALUE% of attacks that hit inflict 'floored' status.
+venom	dot	10		biological					Deals VALUE biological DOT at the end of every round.
+weight	offense	30		physical	miss&block	miss			VALUE% of attacks made that missed by blocking instead hit.
+wither	iot	3		spiritual			weaken		VALUE% chance at the end of every round to inflict 'weaken' status.
